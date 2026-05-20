@@ -1,370 +1,740 @@
 import {
   test,
-  expect
+  expect,
+  APIRequestContext,
+  Page
 } from '@playwright/test';
 
 // ======================================================
 // CONSTANTS
 // ======================================================
 
-const MICROSITE_URL =
-  'https://dev.propfocus.in/propfocus-internal/arhan-F0670E915';
+const API_URL =
+  process.env.API_URL ??
+  'https://dev.propfocus.in/api/whatsapp-webhook';
+
+const PHONE = {
+
+  ACTIVE:
+    process.env.TEST_PHONE ??
+    '9888898888'
+
+} as const;
 
 // ======================================================
-// HELPER
+// DYNAMIC BUYER ID
 // ======================================================
 
-async function captureTrackingResponse(
-  page: any,
-  action: () => Promise<void>
-) {
+function uniqueBuyerId() {
 
-  // Print all network responses for debugging
-  page.on(
+  const timestamp =
+    Date.now()
+      .toString()
+      .slice(-4);
 
-    'response',
+  const random =
+    Math.floor(
+      100 + Math.random() * 900
+    );
 
-    (response) => {
+  return `AUTO${timestamp}${random}`;
 
-      console.log(
-        response.url()
+}
+
+// ======================================================
+// TYPES
+// ======================================================
+
+interface MicrositeResponseBody {
+
+  success: boolean;
+
+  micrositeUrl:
+    string | null;
+
+  message: string;
+
+  imageURL?:
+    string | null;
+
+}
+
+interface TrackingResponseBody {
+
+  success?: boolean;
+
+  eventType?: string;
+
+  eventName?: string;
+
+  message?: string;
+
+}
+
+// ======================================================
+// GLOBAL MICROSITE URL
+// ======================================================
+
+let micrositeUrl = '';
+
+// ======================================================
+// CREATE MICROSITE BEFORE ALL TESTS
+// ======================================================
+
+test.beforeAll(
+
+  async ({ request }) => {
+
+    const buyerId =
+      uniqueBuyerId();
+
+    const {
+      responseBody
+    } =
+      await sendMicrositeRequest(
+
+        request,
+
+        `Harsha with ID ${buyerId} for Abhee Tranquila`
+
       );
 
-    }
+    expect(
+      responseBody.success
+    ).toBe(true);
 
-  );
+    expect(
+      responseBody.micrositeUrl
+    ).toBeTruthy();
 
-  // Wait for tracking API response
-  const responsePromise =
-    page.waitForResponse(
+    micrositeUrl =
+      responseBody
+        .micrositeUrl!;
 
-      (response) =>
+    console.log(
+      `Generated Microsite: ${micrositeUrl}`
+    );
 
-        response.url()
-          .includes('/track')
+  }
 
-        &&
+);
 
-        response.request()
-          .method() === 'POST'
+// ======================================================
+// MICROSITE CREATION HELPER
+// ======================================================
+
+async function sendMicrositeRequest(
+
+  request: APIRequestContext,
+
+  messageBody: string,
+
+  phone: string =
+    PHONE.ACTIVE
+
+): Promise<{
+
+  response: Awaited<
+    ReturnType<
+      APIRequestContext['post']
+    >
+  >;
+
+  responseBody:
+    MicrositeResponseBody;
+
+}> {
+
+  const response =
+    await request.post(
+
+      API_URL,
+
+      {
+
+        data: {
+
+          event: 'message',
+
+          data: {
+
+            from: phone,
+
+            body: messageBody
+
+          }
+
+        }
+
+      }
 
     );
 
-  // Perform UI action
-  await action();
+  expect(
+    response.status()
+  ).toBe(200);
 
-  // Wait for API response
-  const response =
-    await responsePromise;
+  const responseBody:
+    MicrositeResponseBody =
+      await response.json();
 
-  // Convert response to JSON
-  const responseBody =
-    await response.json();
-
-  // Print response body
   console.log(
+
     JSON.stringify(
+
       responseBody,
       null,
       2
+
     )
+
   );
 
   return {
+
     response,
+
     responseBody
+
   };
 
 }
 
 // ======================================================
-// TC_DASH_TRACK_01
-// TRACKING API STATUS VALIDATION
+// TRACKING CAPTURE HELPER
 // ======================================================
 
-test(
-  'TC_DASH_TRACK_01 - Tracking API Status Validation @sanity',
+async function captureSpecificTrackingEvent(
 
-  async ({ page }) => {
+  page: Page,
 
-    // Open microsite
-    await page.goto(
-      MICROSITE_URL
-    );
+  action: () => Promise<void>,
 
-    // Capture tracking response
-    const {
-      response,
-      responseBody
-    } =
-      await captureTrackingResponse(
+  expectedEvent?: string
 
-        page,
+) {
 
-        async () => {
+  // Wait for tracking response
+  const responsePromise =
 
-          // Click first image
-          await page
-            .locator('img')
-            .first()
-            .click();
+    page.waitForResponse(
+
+      async response => {
+
+        // Correct endpoint
+        if (
+
+          !response.url()
+            .includes('/api/track-event')
+
+        ) {
+
+          return false;
 
         }
 
-      );
+        // Correct method
+        if (
 
-    // Validate API status
-    expect(
-      response.status()
-    ).toBe(200);
+          response.request()
+            .method() !== 'POST'
 
-    // Validate event type exists
-    expect(
-      responseBody.eventType
-    ).toBeTruthy();
+        ) {
 
-  }
-);
-
-// ======================================================
-// TC_DASH_TRACK_02
-// BROCHURE DOWNLOAD TRACKING
-// ======================================================
-
-test(
-  'TC_DASH_TRACK_02 - Brochure Download Tracking @sanity',
-
-  async ({ page }) => {
-
-    await page.goto(
-      MICROSITE_URL
-    );
-
-    const {
-      response,
-      responseBody
-    } =
-      await captureTrackingResponse(
-
-        page,
-
-        async () => {
-
-          // Click brochure button
-          await page
-            .getByText(
-              'Brochure'
-            )
-            .click();
+          return false;
 
         }
 
-      );
+        // Parse body safely
+        const body =
+          await response.json();
 
-    expect(
-      response.status()
-    ).toBe(200);
+        console.log(
+          body
+        );
 
-    expect(
-      responseBody.eventType
-    ).toBeTruthy();
+        // If no expected event,
+        // accept first tracking event
+        if (!expectedEvent) {
 
-  }
-);
-
-// ======================================================
-// TC_DASH_TRACK_03
-// MAP CLICK TRACKING
-// ======================================================
-
-test(
-  'TC_DASH_TRACK_03 - Map Click Tracking @sanity',
-
-  async ({ page }) => {
-
-    await page.goto(
-      MICROSITE_URL
-    );
-
-    const {
-      response,
-      responseBody
-    } =
-      await captureTrackingResponse(
-
-        page,
-
-        async () => {
-
-          // Click maps/location section
-          await page
-            .locator(
-              'a[href*="maps"]'
-            )
-            .first()
-            .click();
+          return true;
 
         }
 
-      );
+        // Match exact event
+        return (
 
-    expect(
-      response.status()
-    ).toBe(200);
-
-    expect(
-      responseBody.eventType
-    ).toBeTruthy();
-
-  }
-);
-
-// ======================================================
-// TC_DASH_TRACK_04
-// CAROUSEL IMAGE TRACKING
-// ======================================================
-
-test(
-  'TC_DASH_TRACK_04 - Carousel Tracking @regression',
-
-  async ({ page }) => {
-
-    await page.goto(
-      MICROSITE_URL
-    );
-
-    const {
-      response,
-      responseBody
-    } =
-      await captureTrackingResponse(
-
-        page,
-
-        async () => {
-
-          // Click next carousel button
-          await page
-            .locator(
-              '.swiper-button-next'
-            )
-            .click();
-
-        }
-
-      );
-
-    expect(
-      response.status()
-    ).toBe(200);
-
-    expect(
-      responseBody.eventType
-    ).toBeTruthy();
-
-  }
-);
-
-// ======================================================
-// TC_DASH_TRACK_05
-// MULTIPLE EVENT VALIDATION
-// ======================================================
-
-test(
-  'TC_DASH_TRACK_05 - Multiple Event Validation @regression',
-
-  async ({ page }) => {
-
-    await page.goto(
-      MICROSITE_URL
-    );
-
-    for (
-      let i = 0;
-      i < 3;
-      i++
-    ) {
-
-      const {
-        response
-      } =
-        await captureTrackingResponse(
-
-          page,
-
-          async () => {
-
-            await page
-              .locator('img')
-              .first()
-              .click();
-
-          }
+          body.eventType ===
+          expectedEvent
 
         );
 
-      expect(
-        response.status()
-      ).toBe(200);
+      },
 
-    }
+      {
+        timeout: 15000
+      }
+
+    );
+
+  // Run click + wait together
+  await Promise.all([
+
+    responsePromise,
+
+    action()
+
+  ]);
+
+  // Final response
+  const response =
+    await responsePromise;
+
+  const responseBody =
+    await response.json();
+
+  return {
+
+    response,
+
+    responseBody
+
+  };
+
+}
+// ======================================================
+// COMMON TRACKING VALIDATION
+// ======================================================
+
+async function validateTrackingEvent(
+
+  page: Page,
+
+  action: () => Promise<void>
+
+) {
+
+  const {
+    response,
+    responseBody
+  } =
+
+    await captureSpecificTrackingEvent(
+
+      page,
+      action,
+      'expected-event-name'
+
+    );
+
+  // Status validation
+  expect(
+    response.status()
+  ).toBe(200);
+
+  // Event validation
+  expect(
+
+    responseBody.eventType
+    ??
+
+    responseBody.eventName
+
+  ).toBeTruthy();
+
+  console.log(
+
+    `Tracked Event: ${
+      responseBody.eventType
+      ??
+      responseBody.eventName
+    }`
+
+  );
+
+}
+
+// ======================================================
+// TC_MS_01
+// BROCHURE TRACKING
+// ======================================================
+
+test(
+
+  'TC_MS_01 - Brochure Tracking @sanity',
+
+  async ({ page }) => {
+
+    await page.goto(
+      micrositeUrl
+    );
+
+    await page.waitForLoadState(
+      'networkidle'
+    );
+
+    const brochureButton =
+
+      page
+        .getByRole(
+
+          'button',
+
+          {
+            name: 'View brochure'
+          }
+
+        )
+        .first();
+
+    await brochureButton
+      .scrollIntoViewIfNeeded();
+
+    // Capture brochure tracking
+    const {
+      responseBody
+    } =
+
+      await captureSpecificTrackingEvent(
+
+        page,
+
+        async () => {
+
+          await brochureButton
+            .click();
+
+        }
+
+      );
+
+    console.log(
+      `Tracked Event: ${responseBody.eventType}`
+    );
+
+    // Validate event exists
+    expect(
+
+      responseBody.eventType
+
+    ).toBeTruthy();
 
   }
+
 );
 
 // ======================================================
-// TC_DASH_TRACK_06
+// TC_MS_02
+// SITE VISIT TRACKING
+// ======================================================
+
+test(
+
+  'TC_MS_02 - Site Visit Tracking @sanity',
+
+  async ({ page }) => {
+
+    await page.goto(
+      micrositeUrl
+    );
+
+    await validateTrackingEvent(
+
+      page,
+
+      async () => {
+
+        const siteVisitButton =
+
+          page
+            .getByRole(
+
+              'button',
+
+              {
+                name: 'Book Site Visit'
+              }
+
+            );
+
+        await siteVisitButton
+          .scrollIntoViewIfNeeded();
+
+        await siteVisitButton
+          .click();
+
+      }
+
+    );
+
+  }
+
+);
+
+// ======================================================
+// TC_MS_03
+// IMAGE TRACKING
+// ======================================================
+
+test(
+
+  'TC_MS_03 - Image Tracking @sanity',
+
+  async ({ page }) => {
+
+    await page.goto(
+      micrositeUrl
+    );
+
+    await validateTrackingEvent(
+
+      page,
+
+      async () => {
+
+        await page
+          .locator('img')
+          .nth(1)
+          .click();
+
+      }
+
+    );
+
+  }
+
+);
+
+// ======================================================
+// TC_MS_04
+// MOBILE UI VALIDATION
+// ======================================================
+
+test(
+
+  'TC_MS_04 - Mobile UI Validation @regression',
+
+  async ({ page }) => {
+
+    await page.setViewportSize({
+
+      width: 390,
+      height: 844
+
+    });
+
+    await page.goto(
+      micrositeUrl
+    );
+
+    await expect(
+
+      page.locator('img')
+        .first()
+
+    ).toBeVisible();
+
+    await expect(
+
+      page.getByRole(
+
+        'button',
+
+        {
+          name: 'View brochure'
+        }
+
+      ).first()
+
+    ).toBeVisible();
+
+  }
+
+);
+
+// ======================================================
+// TC_MS_05
+// IMAGE API VALIDATION
+// ======================================================
+
+test(
+
+  'TC_MS_05 - Image API Should Not Return 400 @regression',
+
+  async ({ page }) => {
+
+    const failedResponses:
+      string[] = [];
+
+    page.on(
+
+      'response',
+
+      response => {
+
+        const url =
+          response.url();
+
+        const status =
+          response.status();
+
+        if (
+
+          url.match(
+            /\.(png|jpg|jpeg|webp)/i
+          )
+
+          &&
+
+          status === 400
+
+        ) {
+
+          console.log(
+            `Broken Image: ${url}`
+          );
+
+          failedResponses.push(
+            url
+          );
+
+        }
+
+      }
+
+    );
+
+    await page.goto(
+      micrositeUrl
+    );
+
+    await page.waitForTimeout(
+      5000
+    );
+
+    expect(
+      failedResponses.length
+    ).toBe(0);
+
+  }
+
+);
+
+// ======================================================
+// TC_MS_06
 // PERFORMANCE TEST
 // ======================================================
 
 test(
-  'TC_DASH_TRACK_06 - Tracking API Performance @performance',
+
+  'TC_MS_06 - Microsite Performance @performance',
 
   async ({ page }) => {
-
-    await page.goto(
-      MICROSITE_URL
-    );
 
     const start =
       Date.now();
 
-    const {
-      response,
-      responseBody
-    } =
-      await captureTrackingResponse(
+    await page.goto(
+      micrositeUrl
+    );
 
-        page,
-
-        async () => {
-
-          await page
-            .locator('img')
-            .first()
-            .click();
-
-        }
-
-      );
+    await page.waitForLoadState(
+      'networkidle'
+    );
 
     const ms =
       Date.now() - start;
 
     console.log(
-      `Response Time: ${ms} ms`
+      `Load Time: ${ms} ms`
     );
-
-    expect(
-      response.status()
-    ).toBe(200);
-
-    expect(
-      responseBody.eventType
-    ).toBeTruthy();
 
     expect(ms)
       .toBeLessThan(5000);
 
   }
+
+);
+
+// ======================================================
+// TC_MS_07
+// UI ELEMENT VALIDATION
+// ======================================================
+
+test(
+
+  'TC_MS_07 - UI Elements Validation @regression',
+
+  async ({ page }) => {
+
+    await page.goto(
+      micrositeUrl
+    );
+
+    await expect(
+
+      page.locator('img')
+        .first()
+
+    ).toBeVisible();
+
+    await expect(
+
+      page.getByRole(
+
+        'button',
+
+        {
+          name: 'View brochure'
+        }
+
+      ).first()
+
+    ).toBeVisible();
+
+    await expect(
+
+      page.locator('body')
+
+    ).toContainText(
+      'Abhee'
+    );
+
+  }
+
+);
+
+// ======================================================
+// TC_MS_08
+// NAVIGATION TAB TRACKING
+// ======================================================
+
+test(
+
+  'TC_MS_08 - Navigation Tracking @regression',
+
+  async ({ page }) => {
+
+    await page.goto(
+      micrositeUrl
+    );
+
+    await validateTrackingEvent(
+
+      page,
+
+      async () => {
+
+        await page
+          .getByText(
+            'Amenities'
+          )
+          .click();
+
+      }
+
+    );
+
+  }
+
 );
