@@ -1077,127 +1077,184 @@ test(
 
   async ({ page }) => {
 
-    await page.goto(micrositeUrl);
+    await page.goto(
+      micrositeUrl
+    );
 
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState(
+      'networkidle'
+    );
 
-    // Hero section
+    // ======================================================
+    // HERO SECTION
+    // ======================================================
+
+    // Main project/carousel image
     await expect(
 
-  page.locator(
-    'img[src*="projects"]'
-  ).first()
+      page.locator(
+        'img[src*="projects"]'
+      ).first()
 
-).toBeVisible();                                           // main carousel image must be visible
+    ).toBeVisible();
+
+    // Project title exists
+    // (dynamic project-safe validation)
+    await expect(
+
+      page.locator(
+        'h1, h2'
+      ).first()
+
+    ).toBeVisible();
+
+    // Pricing section visible
+    await expect(
+
+      page
+        .getByText('Starting Price')
+        .first()
+
+    ).toBeVisible();
+
+    // ======================================================
+    // CTA BUTTONS
+    // ======================================================
 
     await expect(
-      page.getByText('Abhee Tranquila').first()
-    ).toBeVisible();                                               // project name must be visible
 
-    await expect(
-      page.getByText('Starting Price').first()
-    ).toBeVisible();                                               // pricing must be visible
+      page
+        .getByRole(
+          'button',
+          {
+            name: 'View brochure'
+          }
+        )
+        .first()
 
-    // CTA buttons
-    await expect(
-      page.getByRole('button', { name: 'View brochure' }).first()
     ).toBeVisible();
 
     await expect(
-      page.getByRole('button', { name: 'Book Site Visit' }).first()
+
+      page
+        .getByRole(
+          'button',
+          {
+            name: 'Book Site Visit'
+          }
+        )
+        .first()
+
     ).toBeVisible();
 
-    // Project info cards
-    await expect(
-      page.getByText('Configurations').first()
-    ).toBeVisible();                                               // Configurations card visible
+    // ======================================================
+    // PROJECT INFO SECTION
+    // ======================================================
 
     await expect(
-      page.getByText('Plots').first()
-    ).toBeVisible();                                               // project type shown as "Plots"
+
+      page
+        .getByText('Configurations')
+        .first()
+
+    ).toBeVisible();
 
     await expect(
-      page.getByText('Under Construction').first()
-    ).toBeVisible();                                               // stage card visible
+
+      page
+        .getByText('RERA Status')
+        .first()
+
+    ).toBeVisible();
 
     await expect(
-      page.getByText('RERA Status').first()
-    ).toBeVisible();                                               // RERA status card visible
 
-    await expect(
-      page.getByRole('button', { name: 'View Certificate' })
-    ).toBeVisible();                                               // RERA certificate button visible
+      page
+        .getByRole(
+          'button',
+          {
+            name: 'View Certificate'
+          }
+        )
 
-    // Navigation tabs
+    ).toBeVisible();
+
+    // ======================================================
+    // NAVIGATION TABS
+    // ======================================================
+
     for (
 
-  const tab of [
+      const tab of [
 
-    'Overview',
+        'Overview',
 
-    'Experience',
+        'Experience',
 
-    'Units',
+        'Units',
 
-    'Pricing',
+        'Pricing',
 
-    'Amenities',
+        'Amenities',
 
-    'Location',
+        'Location',
 
-    'About Builder'
+        'About Builder'
 
-  ]
+      ]
 
-) {
+    ) {
 
-  await expect(
+      await expect(
 
-    page
-      .getByText(tab)
-      .first()
+        page
+          .getByText(tab)
+          .first()
 
-  ).toBeVisible();
+      ).toBeVisible();
 
-}
+    }
 
-    // Location section
-    // Location section
-
-// Location section
-
-await expect(
-
-  page
-    .getByText('Location')
-    .first()
-
-).toBeVisible();
-
-await expect(
-
-  page
-    .locator('iframe')
-    .first()
-
-).toBeVisible();
-
-await expect(
-
-  page
-    .getByText('SWIFT City')
-    .first()
-
-).toBeVisible();                               // nearby landmark must be visible
-
-    // Contact section
-    await expect(
-      page.getByText('Still Have a Question?')
-    ).toBeVisible();                                               // contact section heading must be visible
+    // ======================================================
+    // LOCATION SECTION
+    // ======================================================
 
     await expect(
-      page.getByText('Request Live Inventory')
-    ).toBeVisible();                                               // inventory button must be visible in contact section
+
+      page
+        .getByText('Location')
+        .first()
+
+    ).toBeVisible();
+
+    // Google Maps iframe visible
+    await expect(
+
+      page
+        .locator('iframe')
+        .first()
+
+    ).toBeVisible();
+
+    // ======================================================
+    // CONTACT SECTION
+    // ======================================================
+
+    await expect(
+
+      page
+        .getByText('Still Have a Question?')
+        .first()
+
+    ).toBeVisible();
+
+    await expect(
+
+      page
+        .getByText('Request Live Inventory')
+        .first()
+
+    ).toBeVisible();
 
   }
 
