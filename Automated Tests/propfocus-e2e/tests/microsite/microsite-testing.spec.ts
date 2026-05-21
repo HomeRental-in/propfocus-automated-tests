@@ -532,7 +532,7 @@ test(
       page.locator('img')
         .first()
 
-    ).toBeVisible();
+    ).toBeVisible();    
 
     await expect(
 
