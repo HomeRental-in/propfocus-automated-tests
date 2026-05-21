@@ -21,22 +21,70 @@ const PHONE = {
 
 const TRACKING_API = '/api/track-event';                           // partial URL used to match tracking calls in the network tab
 
-const EVENT = {                                                    // exact eventType strings confirmed from network logs — validated literally in every assertion
-  LINK_OPEN:              'link_open',                             // fired automatically when the microsite link is first opened
-  PAGE_VIEW:              'page_view',                             // fired on each page/section view
-  PROJECT_DETAILS:        'project_details_viewed',                // fired when project details section is viewed
-  BROCHURE_VIEWED:        'download_brochure',                     // fired when "View brochure" button is clicked — confirmed from logs
-  SITE_VISIT_CLICKED:     'book_site_visit',                       // fired when "Book Site Visit" button is clicked
-  IMAGE_CLICKED:          'gallery_viewed',                        // fired when a gallery image is clicked — confirmed from logs
-  THUMBNAIL_CLICKED:      'thumbnail_clicked',                     // fired when a carousel thumbnail is clicked
-  VIDEO_PLAYED:           'youtube_clicked',                       // fired when the YouTube play button is clicked — confirmed from logs
-  MAP_OPENED:             'maps_cta_clicked',                      // fired when the "Open in Maps" button is clicked — confirmed from logs
-  NAV_CLICKED:            'nav_clicked',                           // fired when any top navigation tab is clicked
-  UNIT_CONFIG_CLICKED:    'unit_config_clicked',                   // fired when a unit configuration tab (Plots / 30×40ft etc.) is clicked
-  SHARE_CLICKED:          'share_clicked',                         // fired when "Share Project" button is clicked
-  INVENTORY_REQUESTED:    'contact_wa_call',                       // fired when "Request Live Inventory" button is clicked
-  PHONE_CLICKED:          'contact_wa_call',                         // fired when the phone number button is clicked
-  RERA_CERTIFICATE:       'rera_certificate_viewed',               // fired when "View Certificate" link is clicked
+const EVENT = {
+
+  // ======================================================
+  // PAGE / SESSION EVENTS
+  // ======================================================
+
+  LINK_OPEN:            'link_open',
+
+  PAGE_VIEW:            'page_view',
+
+  REVISITED_LINK:       'revisited_link',
+
+  PROJECT_DETAILS:      'project_details_viewed',
+
+  // ======================================================
+  // CTA EVENTS
+  // ======================================================
+
+  BROCHURE_VIEWED:      'download_brochure',
+
+  FLIPBOOK:             'Flipbook_viewed',
+
+  SITE_VISIT_CLICKED:   'book_site_visit',
+
+  MAP_OPENED:           'maps_cta_clicked',
+
+  URL_SHARED:           'url_shared',
+
+  SHARE_CLICKED:        'share_clicked',
+
+  INVENTORY_REQUESTED:  'contact_wa_call',
+
+  PHONE_CLICKED:        'contact_wa_call',   
+
+  // ======================================================
+  // MEDIA EVENTS
+  // ======================================================
+
+  IMAGE_CLICKED:        'gallery_viewed',
+
+  THUMBNAIL_CLICKED:    'thumbnail_clicked',
+
+  FLOORPLAN:            'floorplan',
+
+  VIDEO_PLAYED:         'youtube_clicked',
+
+  TESTIMONIAL:          'testimonial',
+
+  // ======================================================
+  // NAVIGATION EVENTS
+  // ======================================================
+
+  NAV_CLICKED:          'nav_clicked',
+
+  UNIT_CONFIG_CLICKED:  'unit_config_clicked',
+
+  PHASE_CHANGED:        'phase_changed',
+
+  // ======================================================
+  // DOCUMENT / CERTIFICATE EVENTS
+  // ======================================================
+
+  RERA_CERTIFICATE:     'rera_certificate_viewed',
+
 } as const;
 
 // ======================================================
@@ -1286,6 +1334,582 @@ test(
 
     expect(ms)
       .toBeLessThan(5000);                                        // full page load must complete within 5 seconds
+
+  }
+
+);
+
+// ======================================================
+// NEW TEST CASES — append after TC_MS_17
+// Covers: link_open, revisited_link, flipbook, floorplan,
+//         phase_changed, testimonial events, plus
+//         curation-page UI and carousel navigation
+// ======================================================
+
+// ======================================================
+// TC_MS_18
+// LINK_OPEN EVENT — fires on first page load
+// Captured via waitForResponse BEFORE goto completes
+// ======================================================
+
+test(
+
+  'TC_MS_18 - Link Open Event on First Visit @sanity',
+
+  async ({ page }) => {
+
+    // Register the listener before navigation so we catch
+    // the event that fires immediately on page load
+    const responsePromise =
+      page.waitForResponse(
+
+        async response => {
+
+          if (
+            !response.url().includes(TRACKING_API) ||
+            response.request().method() !== 'POST'
+          ) return false;
+
+          try {
+            const body: TrackingResponseBody = await response.json();
+            console.log(`Intercepted: ${body.eventType ?? body.eventName}`);
+            return (
+              body.eventType === EVENT.LINK_OPEN ||
+              body.eventName === EVENT.LINK_OPEN
+            );
+          } catch {
+            return false;
+          }
+
+        },
+
+        { timeout: 15000 }
+
+      );
+
+    await page.goto(micrositeUrl);
+
+    const response = await responsePromise;
+    const responseBody: TrackingResponseBody = await response.json();
+
+    console.log(JSON.stringify(responseBody, null, 2));
+
+    expect(response.status()).toBe(200);
+
+    expect(
+      responseBody.eventType
+    ).toBe(EVENT.LINK_OPEN);                                       // 'link_open' must fire on the very first page load
+
+  }
+
+);
+
+// ======================================================
+// TC_MS_19
+// REVISITED_LINK EVENT
+//
+// Root cause analysis:
+//   - micrositeUrl is freshly generated each run via
+//     beforeAll → always treated as first visit by backend
+//   - A new browser context wipes client state → link_open
+//   - Same context second goto → still link_open because
+//     the URL itself is brand-new to the backend
+//   - Conclusion: visited state is SERVER-SIDE, keyed by
+//     phone number + microsite URL. A newly generated URL
+//     can NEVER fire revisited_link in the same test run.
+//
+// Solution:
+//   Use a KNOWN previously-visited URL stored in an env
+//   var. If the env var is absent the test is skipped
+//   with a clear message rather than failing.
+//
+// To populate the env var:
+//   1. Run any test that generates a microsite URL.
+//   2. Copy the printed "Generated Microsite:" URL.
+//   3. Set it in your .env or CI secrets:
+//        REVISITED_MICROSITE_URL=https://dev.propfocus.in/propfocus-internal/harsha-XXXXXXX
+//   4. Re-run this test — the backend will now recognise
+//      the URL + phone combo as a repeat visitor.
+// ======================================================
+
+test(
+
+  'TC_MS_19 - Revisited Link Event on Second Navigation @regression',
+
+  async ({ page }) => {
+
+    const revisitUrl =
+
+      process.env.REVISITED_MICROSITE_URL ??
+
+      'https://dev.propfocus.in/propfocus-internal/harsha-77DA0717D';
+
+    if (!revisitUrl) {
+
+      console.log(
+
+        'SKIP: REVISITED_MICROSITE_URL env var not set.\n' +
+
+        'Copy a previously-generated micrositeUrl into that var and re-run.'
+
+      );
+
+      test.skip();
+
+      return;
+
+    }
+
+    console.log(
+      `Revisiting known URL: ${revisitUrl}`
+    );
+
+    const responsePromise =
+
+      page.waitForResponse(
+
+        async response => {
+
+          if (
+
+            !response.url().includes(TRACKING_API) ||
+
+            response.request().method() !== 'POST'
+
+          ) {
+
+            return false;
+
+          }
+
+          try {
+
+            const body: TrackingResponseBody =
+
+              await response.json();
+
+            console.log(
+
+              `Intercepted: ${body.eventType ?? body.eventName}`
+
+            );
+
+            return (
+
+              body.eventType === 'revisited_link' ||
+
+              body.eventName === 'revisited_link'
+
+            );
+
+          } catch {
+
+            return false;
+
+          }
+
+        },
+
+        {
+          timeout: 15000
+        }
+
+      );
+
+    await page.goto(revisitUrl);
+
+    await page.waitForLoadState(
+      'networkidle'
+    );
+
+    const response =
+      await responsePromise;
+
+    const responseBody: TrackingResponseBody =
+
+      await response.json();
+
+    console.log(
+      JSON.stringify(
+        responseBody,
+        null,
+        2
+      )
+    );
+
+    expect(
+      response.status()
+    ).toBe(200);
+
+    expect(
+
+      responseBody.eventType
+
+    ).toBe(
+      'revisited_link'
+    );
+
+  }
+
+);
+
+
+// ======================================================
+// TC_MS_20
+// FLIPBOOK VIEW EVENT TRACKING
+// ======================================================
+
+test(
+
+  'TC_MS_20 - Flipbook View Event Tracking @regression',
+
+  async ({ page }) => {
+
+    await page.goto(micrositeUrl);
+
+    await page.waitForLoadState(
+      'networkidle'
+    );
+
+    await page.waitForTimeout(2000);
+
+    // ==================================================
+    // View Brochure button
+    // ==================================================
+
+    const brochureButton =
+
+      page.getByRole(
+
+        'button',
+
+        {
+          name: /View brochure/i
+        }
+
+      ).first();
+
+    await expect(
+      brochureButton
+    ).toBeVisible();
+
+    // ==================================================
+    // Capture flipbook event
+    // ==================================================
+
+    const { response, responseBody } =
+
+      await captureTrackingEvent(
+
+        page,
+
+        async () => {
+
+          const popupPromise =
+            page.waitForEvent('popup');
+
+          await brochureButton.click({
+            force: true
+          });
+
+          const popup =
+            await popupPromise;
+
+          await popup.waitForLoadState();
+
+          console.log(
+            'Flipbook popup opened'
+          );
+
+        },
+
+        EVENT.FLIPBOOK
+
+      );
+
+    console.log(
+      JSON.stringify(responseBody, null, 2)
+    );
+
+    // ==================================================
+    // Assertions
+    // ==================================================
+
+    expect(
+      response.status()
+    ).toBe(200);
+
+    expect(
+      responseBody.eventType
+    ).toBe(EVENT.FLIPBOOK);
+
+    console.log(
+      'Flipbook tracking event validated ✓'
+    );
+
+  }
+
+);
+// ======================================================
+// TC_MS_21
+// FLOORPLAN EVENT
+// Confirmed event name from logs: 'floorplan_checked'
+// Clicking the floorplan element opens a new tab which
+// closes the original page — same pattern as TC_MS_13.
+// Fix: use page.on('response') listener instead of
+// captureTrackingEvent, then click and wait.
+// ======================================================
+
+test(
+
+  'TC_MS_21 - Floorplan Viewed Event Tracking @regression',
+
+  async ({ page }) => {
+
+    await page.goto(micrositeUrl);
+    await page.waitForLoadState('networkidle');
+
+    await page.getByText('Units').first().click();
+    await page.waitForTimeout(500);
+
+    const floorplanEl =
+      page
+        .locator(
+          '[class*="floorplan"], [class*="floor-plan"], button:has-text("Floor Plan"), img[alt*="floor" i], img[alt*="plan" i]'
+        )
+        .first();
+
+    await floorplanEl.scrollIntoViewIfNeeded();
+
+    let trackingFound = false;
+
+    page.on(
+
+      'response',
+
+      async response => {
+
+        if (!response.url().includes(TRACKING_API)) return;
+
+        try {
+
+          const body: TrackingResponseBody =
+            await response.json();
+
+          console.log(`Intercepted: ${body.eventType}`);
+
+          if (body.eventType === 'floorplan_checked') {
+            trackingFound = true;
+          }
+
+        } catch {}
+
+      }
+
+    );
+
+    await floorplanEl.click({ force: true });
+
+    await page.waitForTimeout(5000);                              // wait for tracking call to fire after click
+
+    expect(
+      trackingFound,
+      'floorplan_checked tracking event not fired'
+    ).toBe(true);
+
+  }
+
+);
+// ======================================================
+// TC_MS_22
+// PHASE_CHANGED EVENT — fires when the user switches
+// between project phases (Phase 1 / Phase 2 etc.) if
+// the project has multiple phases
+// ======================================================
+
+test(
+
+  'TC_MS_22 - Phase Changed Event Tracking @regression',
+
+  async ({ page }) => {
+
+    await page.goto(micrositeUrl);
+    await page.waitForLoadState('networkidle');
+
+    const { response, responseBody } =
+      await captureTrackingEvent(
+
+        page,
+
+        async () => {
+
+          // Phase switcher tabs — labelled "Phase 1", "Phase 2", etc.
+          const phaseTab =
+            page
+              .locator(
+                'button:has-text("Phase"), [class*="phase"] button, [role="tab"]:has-text("Phase")'
+              )
+              .nth(1);                                            // nth(1) = second tab i.e. switch TO a different phase
+
+          await phaseTab.scrollIntoViewIfNeeded();
+          await phaseTab.click();
+
+        },
+
+        'phase_changed'
+
+      );
+
+    expect(response.status()).toBe(200);
+
+    expect(
+      responseBody.eventType
+    ).toBe('phase_changed');
+
+  }
+
+);
+
+// ======================================================
+// TC_MS_23
+// TESTIMONIAL EVENT — fires when the user clicks /
+// interacts with a testimonial card or "Read more"
+// in the testimonials section
+// ======================================================
+
+test(
+
+  'TC_MS_23 - Testimonial Interaction Event Tracking @regression',
+
+  async ({ page }) => {
+
+    await page.goto(micrositeUrl);
+    await page.waitForLoadState('networkidle');
+
+    const { response, responseBody } =
+      await captureTrackingEvent(
+
+        page,
+
+        async () => {
+
+          const testimonialEl =
+            page
+              .locator(
+                '[class*="testimonial"], [class*="review"], blockquote, [class*="quote"]'
+              )
+              .first();
+
+          await testimonialEl.scrollIntoViewIfNeeded();
+          await testimonialEl.click({ force: true });
+
+        },
+
+        'testimonial'
+
+      );
+
+    expect(response.status()).toBe(200);
+
+    expect(
+      responseBody.eventType
+    ).toBe('testimonial');
+
+  }
+
+);
+
+// ======================================================
+// TC_MS_26
+// PROJECT DETAILS PAGE — CAROUSEL IMAGE NAVIGATION
+// ======================================================
+
+test(
+  'TC_MS_26 - Carousel Image Navigation @regression',
+
+  async ({ page }) => {
+
+    await page.goto(micrositeUrl);
+
+    await page.waitForLoadState('networkidle');
+
+    // ==================================================
+    // Main Carousel Image
+    // ==================================================
+
+    const carouselImage = page
+      .locator('img[src*="projects"]')
+      .first();
+
+    await expect(carouselImage)
+      .toBeVisible();
+
+    const initialSrc =
+      await carouselImage.getAttribute('src');
+
+    console.log(
+      `Initial image: ${initialSrc}`
+    );
+
+    // ==================================================
+    // Thumbnail Images
+    // ==================================================
+
+    const thumbnails = page.locator(
+      'div img[src*="projects"]'
+    );
+
+    // Click second thumbnail
+    await thumbnails
+      .nth(2)
+      .click();
+
+    // Wait for image change
+    await expect(async () => {
+
+      const updatedSrc =
+        await carouselImage.getAttribute('src');
+
+      expect(updatedSrc)
+        .not.toBe(initialSrc);
+
+    }).toPass({
+      timeout: 5000
+    });
+
+    const secondSrc =
+      await carouselImage.getAttribute('src');
+
+    console.log(
+      `After thumbnail click: ${secondSrc}`
+    );
+
+    // ==================================================
+    // Return to first image
+    // ==================================================
+
+    await thumbnails
+      .nth(1)
+      .click();
+
+    await expect(async () => {
+
+      const updatedSrc =
+        await carouselImage.getAttribute('src');
+
+      expect(updatedSrc)
+        .toBe(initialSrc);
+
+    }).toPass({
+      timeout: 5000
+    });
+
+    const finalSrc =
+      await carouselImage.getAttribute('src');
+
+    console.log(
+      `After returning: ${finalSrc}`
+    );
 
   }
 
