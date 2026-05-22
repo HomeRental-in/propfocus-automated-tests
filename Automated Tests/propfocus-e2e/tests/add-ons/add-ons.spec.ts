@@ -947,3 +947,145 @@ test.describe('Landing Page', () => {
   );
 
 }); // ← end of Landing Page describe
+
+test.describe('Static Pages UI Validation', () => {
+
+  const pages = [
+
+    '/affiliate',
+    '/privacy-policy',
+    '/terms-of-service',
+    '/faq',
+    '/blogs'
+
+  ];
+
+  // ======================================================
+  // DESKTOP UI CHECK
+  // ======================================================
+
+  test(
+
+    'TC_STATIC_01 - Static Pages Render Correctly On Desktop @regression',
+
+    async ({ page }) => {
+
+      await page.setViewportSize({
+        width: 1440,
+        height: 900
+      });
+
+      for (const path of pages) {
+
+        const url = `${LANDING_URL}${path}`;
+
+        console.log(`Checking desktop page: ${url}`);
+
+        await page.goto(url);
+
+        await page.waitForLoadState('networkidle');
+
+        // ── No 404 / error page ───────────────────────
+        const errorVisible =
+          await page.locator('text=/404|not found|error/i')
+            .first()
+            .isVisible()
+            .catch(() => false);
+
+        expect(
+          errorVisible,
+          `${path} should not show error page`
+        ).toBe(false);
+
+        // ── No horizontal overflow ────────────────────
+        const bodyWidth =
+          await page.evaluate(() => document.body.scrollWidth);
+
+        const viewportWidth =
+          page.viewportSize()?.width ?? 1440;
+
+        expect(
+          bodyWidth,
+          `${path} should not overflow horizontally`
+        ).toBeLessThanOrEqual(viewportWidth + 5);
+
+        // ── Header + footer visible ───────────────────
+        await expect(
+          page.locator('header, nav').first()
+        ).toBeVisible();
+
+        await expect(
+          page.locator('footer').first()
+        ).toBeVisible();
+
+        console.log(`${path} desktop UI verified ✓`);
+
+      }
+
+    }
+
+  );
+
+  // ======================================================
+  // MOBILE UI CHECK
+  // ======================================================
+
+  test(
+
+    'TC_STATIC_02 - Static Pages Render Correctly On Mobile @regression',
+
+    async ({ page }) => {
+
+      await page.setViewportSize({
+        width: 390,
+        height: 844
+      });
+
+      for (const path of pages) {
+
+        const url = `${LANDING_URL}${path}`;
+
+        console.log(`Checking mobile page: ${url}`);
+
+        await page.goto(url);
+
+        await page.waitForLoadState('networkidle');
+
+        // ── No 404 / error page ───────────────────────
+        const errorVisible =
+          await page.locator('text=/404|not found|error/i')
+            .first()
+            .isVisible()
+            .catch(() => false);
+
+        expect(
+          errorVisible,
+          `${path} should not show error page`
+        ).toBe(false);
+
+        // ── No horizontal overflow ────────────────────
+        const bodyWidth =
+          await page.evaluate(() => document.body.scrollWidth);
+
+        const viewportWidth =
+          page.viewportSize()?.width ?? 390;
+
+        expect(
+          bodyWidth,
+          `${path} should not overflow horizontally on mobile`
+        ).toBeLessThanOrEqual(viewportWidth + 5);
+
+        // ── Header visible ────────────────────────────
+        await expect(
+          page.locator('header, nav').first()
+        ).toBeVisible();
+
+        console.log(`${path} mobile UI verified ✓`);
+
+      }
+
+    }
+
+  );
+
+});
