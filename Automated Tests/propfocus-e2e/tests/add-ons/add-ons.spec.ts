@@ -1089,3 +1089,165 @@ test.describe('Static Pages UI Validation', () => {
   );
 
 });
+
+// ======================================================
+// TC_RNR_04
+// RNR should still work WITHOUT Buyer ID
+// ======================================================
+
+test(
+
+  'TC_RNR_04 - RNR Works Without Buyer ID @regression',
+
+  async ({ request }) => {
+
+    const prompt =
+      'Arhan for KNS Sampada RNR';
+
+    const response =
+      await sendPrompt(request, prompt);
+
+    expect(response.success).toBe(true);
+
+    expect(
+      response.message,
+      'RNR template should appear even without Buyer ID'
+    ).toMatch(
+      /tried reaching out|couldn't connect/i
+    );
+
+    console.log(
+      'RNR without Buyer ID verified ✓'
+    );
+
+  }
+
+);
+
+// ======================================================
+// TC_RNR_05
+// RNR keyword inside normal sentence
+// ======================================================
+
+test(
+
+  'TC_RNR_05 - RNR Keyword Inside Sentence Triggers Template @regression',
+
+  async ({ request }) => {
+
+    const prompt =
+      'Arhan with ID 1234 for KNS Sampada. This is an rnr lead';
+
+    const response =
+      await sendPrompt(request, prompt);
+
+    expect(response.success).toBe(true);
+
+    expect(
+      response.message,
+      'RNR keyword inside sentence should trigger template'
+    ).toMatch(
+      /tried reaching out|couldn't connect/i
+    );
+
+    console.log(
+      'RNR keyword inside sentence verified ✓'
+    );
+
+  }
+
+);
+
+// ======================================================
+// TC_RNR_06
+// RNR with multiple projects
+// ======================================================
+
+test(
+
+  'TC_RNR_06 - RNR With Multiple Projects @regression',
+
+  async ({ request }) => {
+
+    const prompt =
+      'Arhan with ID 1234 for Abhee Tranquila and Abhee Aaria and unnati RNR';
+
+    const response =
+      await sendPrompt(request, prompt);
+
+    expect(response.success).toBe(true);
+
+    expect(
+      response.micrositeUrl,
+      'Microsite URL should be generated for multi-project RNR'
+    ).toBeTruthy();
+
+    expect(
+  response.message,
+  'Response should contain Abhee Tranquila'
+).toMatch(/abhee tranquila/i);
+
+expect(
+  response.message,
+  'Response should contain Abhee Aaria'
+).toMatch(/abhee aaria/i);
+
+expect(
+  response.message,
+  'Response should contain Unnati'
+).toMatch(/unnati/i);
+
+    console.log(
+      'Multi-project RNR verified ✓'
+    );
+
+  }
+
+);
+
+// ======================================================
+// TC_BID_07
+// Buyer ID should be case-insensitive
+// ======================================================
+
+test(
+
+  'TC_BID_07 - Buyer ID Case Insensitivity @regression',
+
+  async ({ request }) => {
+
+    const variants = [
+
+      'BID001',
+      'bid001',
+      'Bid001'
+
+    ];
+
+    for (const variant of variants) {
+
+      const prompt =
+        `Arhan with ID ${variant} for Abhee Tranquila`;
+
+      const response =
+        await sendPrompt(request, prompt);
+
+      expect(
+        response.success,
+        `${variant} should be accepted`
+      ).toBe(true);
+
+      expect(
+        response.micrositeUrl,
+        `Microsite should generate for ${variant}`
+      ).toBeTruthy();
+
+      console.log(
+        `Buyer ID variant "${variant}" verified ✓`
+      );
+
+    }
+
+  }
+
+);
