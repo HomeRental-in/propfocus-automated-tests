@@ -2322,4 +2322,50 @@ await expect(
 
   );
 
+
+
+// ====================================================
+// TC_DASH_ROLE_01
+// Sub Broker Role Access Validation
+// ====================================================
+
+test(
+
+  'TC_DASH_ROLE_01 - Sub Broker Access Validation @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.SUB);
+
+    await page.waitForLoadState('networkidle');
+
+    // Allowed sections
+    await expect(
+      page.getByText('Overview')
+    ).toBeVisible();
+
+    await expect(
+      page.getByText('All Leads')
+    ).toBeVisible();
+
+    // Restricted sections
+    const reportsVisible =
+      await page.getByText('Reports')
+        .isVisible()
+        .catch(() => false);
+
+    console.log(
+      `Reports visible for sub broker: ${reportsVisible}`
+    );
+
+    expect(reportsVisible)
+      .toBe(false);
+
+    console.log(
+      'Sub broker role validation passed ✓'
+    );
+
+  }
+
+);
 });
