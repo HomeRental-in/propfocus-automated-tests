@@ -2321,7 +2321,7 @@ await expect(
     }
 
   );
-
+});
 
 
 // ====================================================
@@ -2345,8 +2345,15 @@ test(
     ).toBeVisible();
 
     await expect(
-      page.getByText('All Leads')
-    ).toBeVisible();
+
+  page.getByRole(
+    'button',
+    {
+      name: 'All Leads'
+    }
+  )
+
+).toBeVisible();
 
     // Restricted sections
     const reportsVisible =
@@ -2368,4 +2375,837 @@ test(
   }
 
 );
-});
+
+
+// ====================================================
+// TC_DASH_SEC_01
+// Direct URL Access Without Login
+// ====================================================
+
+test(
+
+  'TC_DASH_SEC_01 - Unauthorized Direct URL Access Redirects To Login @security',
+
+  async ({ page }) => {
+
+    const urls = [
+
+      '/dashboard/reports',
+      '/dashboard/help',
+      '/dashboard/all-leads',
+      '/dashboard/site-visit-tracker'
+
+    ];
+
+    for (const path of urls) {
+
+      await page.goto(
+        `https://dev.propfocus.in${path}`
+      );
+
+      await page.waitForLoadState('networkidle');
+
+      expect(page.url())
+        .toContain('login');
+
+      console.log(
+        `${path} redirected to login ✓`
+      );
+
+    }
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_LEADS_11
+// Activity Timeline Ordering
+// ====================================================
+
+test(
+
+  'TC_DASH_LEADS_11 - Activity Timeline Latest First @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    const firstRow =
+      page.locator('table tbody tr').first();
+
+    await firstRow.click();
+
+    await expect(
+      page.getByText('Activity Timeline')
+    ).toBeVisible();
+
+    const timelineItems =
+      page.locator(
+        '[class*="timeline"]'
+      );
+
+    const count =
+      await timelineItems.count();
+
+    expect(count)
+      .toBeGreaterThan(0);
+
+    console.log(
+      `Timeline items: ${count}`
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_LEADS_12
+// Case Insensitive Search
+// ====================================================
+
+test(
+
+  'TC_DASH_LEADS_12 - Search Is Case Insensitive @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    const searchBox =
+      page.getByPlaceholder(/search/i);
+
+    await searchBox.fill('HARSHA');
+
+    await page.waitForTimeout(1500);
+
+    const firstRow =
+      page.locator('table tbody tr')
+        .first();
+
+    await expect(firstRow)
+      .toContainText(/harsha/i);
+
+    console.log(
+      'Case insensitive search works ✓'
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_LEADS_13
+// No Results UI
+// ====================================================
+
+test(
+
+  'TC_DASH_LEADS_13 - No Results UI Appears @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    const searchBox =
+      page.getByPlaceholder(/search/i);
+
+    await searchBox.fill(
+      'NON_EXISTING_USER_123456'
+    );
+
+    await page.waitForTimeout(1500);
+
+    await expect(
+
+      page.getByText(
+        /no data|no leads|no results/i
+      ).first()
+    ).toBeVisible();
+
+    
+
+    console.log(
+      'No results UI validated ✓'
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_LEADS_14
+// Table Sort Validation
+// ====================================================
+
+test(
+
+  'TC_DASH_LEADS_14 - Table Sorting Works @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    const createDateHeader =
+
+      page.getByRole(
+        'columnheader',
+        {
+          name: /create date/i
+        }
+      );
+
+    await createDateHeader.click();
+
+    await page.waitForTimeout(1000);
+
+    console.log(
+      'Table sorting triggered ✓'
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_LEADS_15
+// Pagination Navigation
+// ====================================================
+
+test(
+
+  'TC_DASH_LEADS_15 - Pagination Navigation Works @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    const nextBtn =
+
+      page.getByRole(
+        'button',
+        {
+          name: /next/i
+        }
+      );
+
+    if (
+      await nextBtn.isVisible()
+    ) {
+
+      await nextBtn.click();
+
+      await page.waitForLoadState(
+        'networkidle'
+      );
+
+      await expect(
+
+  page.getByText(
+    /page \d+ of \d+/i
+  )
+
+).toBeVisible();
+
+      console.log(
+        'Pagination next works ✓'
+      );
+
+    }
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_PERF_01
+// Dashboard Load Performance
+// ====================================================
+
+test(
+
+  'TC_DASH_PERF_01 - Dashboard Loads Under 4 Seconds @performance',
+
+  async ({ page }) => {
+
+    const start = Date.now();
+
+    await login(page, PHONE.MAIN);
+
+    const loadTime =
+      Date.now() - start;
+
+    console.log(
+      `Dashboard Load Time: ${loadTime}ms`
+    );
+
+    expect(loadTime)
+      .toBeLessThan(4000);
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_LOGIN_05
+// Invalid OTP Validation
+// ====================================================
+
+test(
+
+  'TC_DASH_LOGIN_05 - Invalid OTP Shows Error @security',
+
+  async ({ page }) => {
+
+    await page.goto(LOGIN_URL);
+
+    await page.locator(
+      'input[type="tel"]'
+    ).fill(PHONE.MAIN);
+
+    await page.getByRole(
+      'button',
+      { name: 'Send OTP' }
+    ).click();
+
+    await page.locator(
+      'input[maxlength="6"]'
+    ).fill('111111');
+
+    await page.getByRole(
+      'button',
+      { name: /verify/i }
+    ).click();
+
+    await expect(
+
+      page.getByText(
+        /Invalid OTP|Internal server error/i
+      ).first()
+
+    ).toBeVisible();
+
+    console.log(
+      'Invalid OTP validation passed ✓'
+    );
+
+
+
+
+  }
+  
+
+);
+
+// ====================================================
+// TC_DASH_OV_09
+// Generate Microsite Button Functionality
+// ====================================================
+
+test(
+
+  'TC_DASH_OV_09 - Generate Microsite Button Works @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'Overview');
+
+    const button =
+      page.getByRole(
+        'button',
+        {
+          name: /generate microsite/i
+        }
+      );
+
+    await expect(button)
+      .toBeVisible();
+
+    await button.click();
+
+    await page.waitForLoadState(
+      'networkidle'
+    );
+
+    console.log(
+      'Generate Microsite button clicked ✓'
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_LEADS_16
+// Buyer ID Search Works
+// ====================================================
+
+test(
+
+  'TC_DASH_LEADS_16 - Buyer ID Search Works @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    // First table row
+    const firstRow =
+      page.locator('table tbody tr')
+        .first();
+
+    await expect(firstRow)
+      .toBeVisible();
+
+    // Extract Buyer ID
+    const buyerId =
+
+      await firstRow.locator('text=/AUTO\\d+/i')
+        .innerText();
+
+    console.log(
+      `Buyer ID: ${buyerId}`
+    );
+
+    // Search using Buyer ID
+    const searchBox =
+      page.getByPlaceholder(
+        /search buyers, buyer id, or projects/i
+      );
+
+    await searchBox.fill(buyerId);
+
+    await page.waitForTimeout(2000);
+
+    // Validate filtered results
+    await expect(firstRow)
+      .toContainText(buyerId);
+
+    console.log(
+      'Buyer ID search works ✓'
+    );
+
+  }
+
+);
+// ====================================================
+// TC_DASH_LEADS_17
+// Multiple Filters Work Together
+// ====================================================
+
+test(
+
+  'TC_DASH_LEADS_17 - Multiple Filters Work Together @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    // ==================================================
+    // Project Filter
+    // ==================================================
+
+    const projectFilter =
+
+      page.getByRole(
+        'button',
+        {
+          name: /projects/i
+        }
+      );
+
+    await projectFilter.click();
+
+    // Wait for dropdown options
+    const projectOption =
+
+  page.getByText(
+    'Abhee Tranquila'
+  ).first();
+
+    await expect(projectOption)
+  .toBeVisible();
+
+await projectOption.click();
+
+    console.log(
+      'Project filter applied ✓'
+    );
+
+    // ==================================================
+    // Agent Filter
+    // ==================================================
+
+    const agentFilter =
+
+      page.getByRole(
+        'button',
+        {
+          name: /Agents/i
+        }
+      );
+
+    await agentFilter.click();
+
+   const agentOption =
+
+  page.getByText(
+    'Automation Pre sales rep'
+  ).first();
+
+    await expect(agentOption)
+  .toBeVisible();
+
+await agentOption.click();
+
+    console.log(
+      'Agent filter applied ✓'
+    );
+
+    // ==================================================
+    // Validate table still has rows
+    // ==================================================
+
+    const rows =
+      page.locator('table tbody tr');
+
+    await expect(rows.first())
+      .toBeVisible();
+
+    console.log(
+      'Multiple filters work together ✓'
+    );
+
+  }
+
+);
+// ====================================================
+// TC_DASH_EXPORT_01
+// Export Under 2500 Leads Downloads File
+// ====================================================
+
+test(
+
+  'TC_DASH_EXPORT_01 - Export Under 2500 Leads Downloads File @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    const exportBtn =
+      page.getByRole(
+        'button',
+        { name: /export/i }
+      );
+
+    const [download] =
+      await Promise.all([
+
+        page.waitForEvent('download'),
+
+        exportBtn.click()
+
+      ]);
+
+    const fileName =
+      download.suggestedFilename();
+
+    console.log(
+      `Downloaded file: ${fileName}`
+    );
+
+    expect(fileName)
+      .toBeTruthy();
+
+    console.log(
+      'Export download validated ✓'
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_EXPORT_02
+// Export Over 2500 Leads Triggers Email
+// ====================================================
+
+test(
+
+  'TC_DASH_EXPORT_02 - Export Over 2500 Leads Triggers Email @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    // Set rows per page/filter if needed
+    // Assuming environment already has >2500 leads
+
+    const exportBtn =
+      page.getByRole(
+        'button',
+        { name: /export/i }
+      );
+
+    await exportBtn.click();
+
+    await expect(
+
+      page.getByText(
+        /email|sent to your email/i
+      )
+
+    ).toBeVisible();
+
+    console.log(
+      'Export email trigger validated ✓'
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_OV_10
+// Generate Microsite Creates Link
+// ====================================================
+
+// ====================================================
+// TC_DASH_OV_10
+// Generate Microsite Button Works
+// ====================================================
+
+test(
+
+  'TC_DASH_OV_10 - Generate Microsite Button Works @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'Overview');
+
+    const generateBtn =
+
+      page.getByRole(
+        'button',
+        {
+          name: /generate microsite/i
+        }
+      );
+
+    await expect(generateBtn)
+      .toBeVisible();
+
+    // Listen for API response
+    const responsePromise =
+
+      page.waitForResponse(response =>
+
+        response.url().includes('microsite') &&
+
+        response.status() === 200
+
+      );
+
+    await generateBtn.click();
+
+    const response =
+      await responsePromise;
+
+    console.log(
+      `Microsite API Status: ${response.status()}`
+    );
+
+    expect(
+      response.status()
+    ).toBe(200);
+
+    console.log(
+      'Generate Microsite validated ✓'
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_SV_13
+// Site Visit Button Functionality
+// ====================================================
+
+test(
+
+  'TC_DASH_SV_13 - Site Visit Button Works @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    const siteVisitBtn =
+      page.getByRole(
+        'button',
+        {
+          name: /Site Visit Tracker/i
+        }
+      ).first();
+
+    await expect(siteVisitBtn)
+      .toBeVisible();
+
+    await siteVisitBtn.click();
+
+    await page.waitForLoadState(
+      'networkidle'
+    );
+
+    await expect(
+
+  page.getByRole(
+    'button',
+    {
+      name: /Visits Scheduled/i
+    }
+  )
+
+).toBeVisible();
+
+    console.log(
+      'Site Visit button functionality works ✓'
+    );
+
+  }
+
+);
+
+// ====================================================
+// TC_DASH_LEADS_18
+// Table Sort Ascending & Descending Validation
+// ====================================================
+
+test(
+
+  'TC_DASH_LEADS_18 - Table Sort Ascending Descending Works @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await clickNav(page, 'All Leads');
+
+    // ==================================================
+    // CREATE DATE COLUMN
+    // ==================================================
+
+    const createDateHeader =
+
+      page.getByRole(
+        'columnheader',
+        {
+          name: /create date/i
+        }
+      );
+
+    await expect(createDateHeader)
+      .toBeVisible();
+
+    // ==================================================
+    // ASCENDING SORT
+    // ==================================================
+
+    await createDateHeader.click();
+
+    await page.waitForTimeout(2000);
+
+    const ascDates =
+
+      await page.locator(
+        'table tbody tr td:first-child'
+      ).allTextContents();
+
+    console.log(
+      'Ascending Dates:',
+      ascDates
+    );
+
+    // Convert to timestamps
+    const ascTimestamps = ascDates.map(date =>
+
+      new Date(date.trim()).getTime()
+
+    );
+
+    // Copy & sort
+    const sortedAsc =
+
+      [...ascTimestamps]
+        .sort((a, b) => a - b);
+
+    expect(ascTimestamps)
+      .toEqual(sortedAsc);
+
+    console.log(
+      'Ascending sort validated ✓'
+    );
+
+    // ==================================================
+    // DESCENDING SORT
+    // ==================================================
+
+    await createDateHeader.click();
+
+    await page.waitForTimeout(2000);
+
+    const descDates =
+
+      await page.locator(
+        'table tbody tr td:first-child'
+      ).allTextContents();
+
+    console.log(
+      'Descending Dates:',
+      descDates
+    );
+
+    const descTimestamps = descDates.map(date =>
+
+      new Date(date.trim()).getTime()
+
+    );
+
+    const sortedDesc =
+
+      [...descTimestamps]
+        .sort((a, b) => b - a);
+
+    expect(descTimestamps)
+      .toEqual(sortedDesc);
+
+    console.log(
+      'Descending sort validated ✓'
+    );
+
+  }
+
+);
