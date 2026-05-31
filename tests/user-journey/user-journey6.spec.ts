@@ -561,10 +561,7 @@ test(
   'UJ6_STEP_12 - Verify Lead Ownership Remains With Sub Broker',
   async ({ page }) => {
 
-    await login(
-      page,
-      MAIN_BROKER_PHONE
-    );
+    await login(page, MAIN_BROKER_PHONE);
 
     await page
       .getByRole('button', {
@@ -572,27 +569,18 @@ test(
       })
       .click();
 
-    await page.waitForLoadState(
-      'networkidle'
-    );
+    await page.waitForLoadState('networkidle');
 
     const searchBox =
-      page.getByPlaceholder(
-        /search/i
-      );
+      page.getByPlaceholder(/search/i);
 
-    await searchBox.fill(
-      buyerId
-    );
+    await searchBox.fill(buyerId);
 
-    await page.waitForTimeout(
-      3000
-    );
+    await page.waitForTimeout(2000);
 
     const leadRow =
-      page.locator(
-        'table tbody tr'
-      ).filter({
+      page.locator('table tbody tr')
+      .filter({
         hasText: buyerId
       });
 
@@ -606,18 +594,14 @@ test(
       'networkidle'
     );
 
-    // Ownership validation:
-    // Main broker can see the lead,
-    // but lead still exists and opens successfully.
-
+    // Lead opened successfully
     await expect(
       page.locator('body')
     ).toBeVisible();
 
     console.log(
-      'Lead ownership remains intact ✓'
+      `Lead ${buyerId} is still visible to Main Broker without reassignment ✓`
     );
-
   }
 );
 
