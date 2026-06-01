@@ -866,3 +866,63 @@ test(
     expect(body.micrositeUrl).toBeTruthy();
   }
 );
+
+test(
+  'UJ8_STEP_16 - Verify Mixed Referral And Investor Prompt',
+  async ({ request }) => {
+
+    const response =
+      await request.post(
+        'https://dev.propfocus.in/api/whatsapp-webhook',
+        {
+          data: {
+            event: 'message',
+            data: {
+              from: MAIN_BROKER_PHONE,
+              body:
+                'Aakash for Unnati referral and Aakash for Abhee Aaria investor'
+            }
+          }
+        }
+      );
+
+    expect(
+      response.status()
+    ).toBe(200);
+
+    const body =
+      await response.json();
+
+    console.log(
+      JSON.stringify(
+        body,
+        null,
+        2
+      )
+    );
+
+    expect(
+      body.success
+    ).toBe(true);
+
+    expect(
+      body.micrositeUrl
+    ).toBeTruthy();
+
+    expect(
+      body.message
+    ).toContain(
+      'Hosachiguru Unnati'
+    );
+
+    expect(
+      body.message
+    ).toContain(
+      'Abhee Aaria'
+    );
+
+    console.log(
+      'Mixed Referral + Investor Prompt Accepted ✓'
+    );
+  }
+);
