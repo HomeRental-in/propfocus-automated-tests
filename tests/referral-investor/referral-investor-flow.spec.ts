@@ -926,3 +926,58 @@ test(
     );
   }
 );
+
+test(
+  'UJ8_STEP_17 - Verify RNR And Referral In Same Prompt',
+  async ({ request }) => {
+
+    const response =
+      await request.post(
+        'https://dev.propfocus.in/api/whatsapp-webhook',
+        {
+          data: {
+            event: 'message',
+            data: {
+              from: MAIN_BROKER_PHONE,
+              body:
+                'Aakash for Unnati rnr referral'
+            }
+          }
+        }
+      );
+
+    expect(
+      response.status()
+    ).toBe(200);
+
+    const body =
+      await response.json();
+
+    console.log(
+      JSON.stringify(
+        body,
+        null,
+        2
+      )
+    );
+
+    expect(
+      body.success
+    ).toBe(true);
+
+    expect(
+      body.micrositeUrl
+    ).toBeFalsy();
+
+    expect(
+      body.message
+        .toLowerCase()
+    ).toContain(
+      'ambiguous'
+    );
+
+    console.log(
+      'RNR + Referral Prompt Rejected ✓'
+    );
+  }
+);
