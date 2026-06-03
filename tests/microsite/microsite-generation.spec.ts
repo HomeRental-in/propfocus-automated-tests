@@ -692,3 +692,58 @@ test(
 
   }
 );
+
+test(
+  'UJ8_STEP_22 - Verify Boss And Phased RNR Cases',
+  async ({ request }) => {
+
+    const prompts = [
+
+      `Arhan with ID ${uniqueBuyerId()} for Sumadhura Solace rnr`,
+      `Arhan with ID ${uniqueBuyerId()} for KNS Samooha rnr`,
+      `Arhan with ID ${uniqueBuyerId()} for KNS Ananta rnr`,
+
+      `Arhan with ID ${uniqueBuyerId()} for Farm Showcase rnr`,
+      `Arhan with ID ${uniqueBuyerId()} for Farm Land Expo rnr`,
+      `Arhan with ID ${uniqueBuyerId()} for All Projects rnr`
+    ];
+
+    for (const prompt of prompts) {
+
+      const response =
+        await request.post(
+          'https://dev.propfocus.in/api/whatsapp-webhook',
+          {
+            data: {
+              event: 'message',
+              data: {
+                from: PHONE.ACTIVE,
+                body: prompt
+              }
+            }
+          }
+        );
+
+      expect(response.status()).toBe(200);
+
+      const body =
+        await response.json();
+
+      console.log(
+        `\nPrompt: ${prompt}`
+      );
+
+      console.log(
+        JSON.stringify(
+          body,
+          null,
+          2
+        )
+      );
+
+      expect(
+        body.success
+      ).toBe(true);
+    }
+  }
+);

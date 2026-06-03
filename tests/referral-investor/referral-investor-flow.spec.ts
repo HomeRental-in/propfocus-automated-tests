@@ -15,6 +15,23 @@ const OTP =
 
 const referralBuyerName =
   'Aakash';
+  function uniqueBuyerId() {
+
+  const timestamp =
+    Date.now().toString().slice(-4);
+
+  const random =
+    Math.floor(100 + Math.random() * 900);
+
+  return `${timestamp}${random}`;
+}
+const referralPrompt =
+  () =>
+    `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria referral`;
+
+const investorPrompt =
+  () =>
+    `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria investor`;
 
 async function login(
   page: Page,
@@ -94,7 +111,8 @@ test.describe.serial(
                   from:
                     MAIN_BROKER_PHONE,
                   body:
-                    `${referralBuyerName} for Abhee Aaria referral`
+                   
+                          referralPrompt() 
                 }
               }
             }
@@ -230,7 +248,8 @@ test.describe.serial(
               from:
                 MAIN_BROKER_PHONE,
               body:
-                'Aakash for Abhee Aaria investor'
+                
+                    investorPrompt()
             }
           }
         }
@@ -363,11 +382,11 @@ test(
   async ({ request }) => {
 
     const referralCases = [
-      'Aakash for Abhee Aaria referral',
-      'Aakash for Abhee Aaria Referral',
-      'Aakash for Abhee Aaria REFERRAL',
-      'Aakash for Abhee Aaria ReFeRrAl'
-    ];
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria referral`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria Referral`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria REFERRAL`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria ReFeRrAl`
+];
 
     for (const prompt of referralCases) {
 
@@ -423,11 +442,11 @@ test(
   async ({ request }) => {
 
     const investorCases = [
-      'Aakash for Abhee Aaria investor',
-      'Aakash for Abhee Aaria Investor',
-      'Aakash for Abhee Aaria INVESTOR',
-      'Aakash for Abhee Aaria InVeStOr'
-    ];
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria investor`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria Investor`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria INVESTOR`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria InVeStOr`
+];
 
     for (const prompt of investorCases) {
 
@@ -484,11 +503,11 @@ test(
   async ({ request }) => {
 
     const invalidPrompts = [
-      'Aakash for Abhee Aaria referal',
-      'Aakash for Abhee Aaria refferal',
-      'Aakash for Abhee Aaria refrral',
-      'Aakash for Abhee Aaria referel'
-    ];
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria referal`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria refferal`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria refrral`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria referel`
+];
 
     for (const prompt of invalidPrompts) {
 
@@ -533,11 +552,11 @@ test(
   async ({ request }) => {
 
     const invalidPrompts = [
-      'Aakash for Abhee Aaria investar',
-      'Aakash for Abhee Aaria investorr',
-      'Aakash for Abhee Aaria invstor',
-      'Aakash for Abhee Aaria invester'
-    ];
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria investar`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria investorr`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria invstor`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria invester`
+];
 
     for (const prompt of invalidPrompts) {
 
@@ -578,11 +597,11 @@ test(
   async ({ request }) => {
 
     const invalidProjects = [
-      'Aakash for XYZ referral',
-      'Aakash for ABC investor',
-      'Aakash for Fake Project referral',
-      'Aakash for Unknown Towers investor'
-    ];
+  `Aakash with ID ${uniqueBuyerId()} for XYZ referral`,
+  `Aakash with ID ${uniqueBuyerId()} for ABC investor`,
+  `Aakash with ID ${uniqueBuyerId()} for Fake Project referral`,
+  `Aakash with ID ${uniqueBuyerId()} for Unknown Towers investor`
+];
 
     for (const prompt of invalidProjects) {
 
@@ -648,11 +667,11 @@ test(
   async ({ request }) => {
 
     const typoProjects = [
-      'Aakash for Abhee Aari referral',
-      'Aakash for Abhee Aria referral',
-      'Aakash for Abhee Aariya referral',
-      'Aakash for Abhee Aariaa referral'
-    ];
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aari referral`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aria referral`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aariya referral`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aariaa referral`
+];
 
     for (const prompt of typoProjects) {
 
@@ -710,11 +729,11 @@ test(
   async ({ request }) => {
 
     const prompts = [
-      `${referralBuyerName} for  Abhee     Aaria referral`,
-      `${referralBuyerName}    for Abhee Aaria referral`,
-      `${referralBuyerName} for Abhee Aaria     referral`,
-      `${referralBuyerName}     for     Abhee     Aaria     referral`
-    ];
+  `Aakash with ID ${uniqueBuyerId()} for  Abhee     Aaria referral`,
+  `Aakash with ID ${uniqueBuyerId()}    for Abhee Aaria referral`,
+  `Aakash with ID ${uniqueBuyerId()} for Abhee Aaria     referral`,
+  `Aakash with ID ${uniqueBuyerId()}     for     Abhee     Aaria     referral`
+];
 
     for (const prompt of prompts) {
 
@@ -853,7 +872,8 @@ test(
             data: {
               from: MAIN_BROKER_PHONE,
               body:
-                '   Aakash for Abhee Aaria referral   '
+               
+                  `   Aakash with ID ${uniqueBuyerId()} for Abhee Aaria referral   `
             }
           }
         }
@@ -940,7 +960,7 @@ test(
             data: {
               from: MAIN_BROKER_PHONE,
               body:
-                'Aakash for Unnati rnr referral'
+  `Aakash with ID ${uniqueBuyerId()} for Unnati rnr referral`
             }
           }
         }
@@ -979,5 +999,172 @@ test(
     console.log(
       'RNR + Referral Prompt Rejected ✓'
     );
+  }
+);
+
+test(
+  'UJ8_STEP_18 - Verify Parser Ambiguity Referral Investor',
+  async ({ request }) => {
+
+    const response =
+      await request.post(
+        'https://dev.propfocus.in/api/whatsapp-webhook',
+        {
+          data: {
+            event: 'message',
+            data: {
+              from: MAIN_BROKER_PHONE,
+              body:
+                `Aakash with ID ${uniqueBuyerId()} referral investor`
+            }
+          }
+        }
+      );
+
+    expect(response.status()).toBe(200);
+
+    const body = await response.json();
+
+    expect(body.success).toBe(true);
+    expect(body.micrositeUrl).toBeFalsy();
+
+    expect(
+      body.message.toLowerCase()
+    ).toContain('ambiguous');
+  }
+);
+test(
+  'UJ8_STEP_19 - Verify Parser Ambiguity RNR Investor Referral',
+  async ({ request }) => {
+
+    const response =
+      await request.post(
+        'https://dev.propfocus.in/api/whatsapp-webhook',
+        {
+          data: {
+            event: 'message',
+            data: {
+              from: MAIN_BROKER_PHONE,
+              body:
+                `Aakash with ID ${uniqueBuyerId()} rnr investor referral`
+            }
+          }
+        }
+      );
+
+    expect(response.status()).toBe(200);
+
+    const body = await response.json();
+
+    expect(body.success).toBe(true);
+    expect(body.micrositeUrl).toBeFalsy();
+
+    expect(
+      body.message.toLowerCase()
+    ).toContain('ambiguous');
+  }
+);
+test(
+  'UJ8_STEP_20 - Verify Parser Ambiguity Referral Investment',
+  async ({ request }) => {
+
+    const response =
+      await request.post(
+        'https://dev.propfocus.in/api/whatsapp-webhook',
+        {
+          data: {
+            event: 'message',
+            data: {
+              from: MAIN_BROKER_PHONE,
+              body:
+                `Aakash with ID ${uniqueBuyerId()} referral investment`
+            }
+          }
+        }
+      );
+
+    expect(response.status()).toBe(200);
+
+    const body = await response.json();
+
+    expect(body.success).toBe(true);
+    expect(body.micrositeUrl).toBeFalsy();
+
+    expect(
+      body.message.toLowerCase()
+    ).toContain('ambiguous');
+  }
+);
+
+test(
+  'UJ8_STEP_21 - Verify Boss And Phased Projects',
+  async ({ request }) => {
+
+    const prompts = [
+
+      // Phased Projects
+      `Arhan with ID ${uniqueBuyerId()} for Sumadhura Solace referral`,
+      `Arhan with ID ${uniqueBuyerId()} for Sumadhura Solace investor`,
+
+      `Arhan with ID ${uniqueBuyerId()} for KNS Samooha referral`,
+      `Arhan with ID ${uniqueBuyerId()} for KNS Samooha investor`,
+
+      `Arhan with ID ${uniqueBuyerId()} for KNS Ananta referral`,
+      `Arhan with ID ${uniqueBuyerId()} for KNS Ananta investor`,
+
+      // Boss Projects
+      `Arhan with ID ${uniqueBuyerId()} for Farm Showcase referral`,
+      `Arhan with ID ${uniqueBuyerId()} for Farm Showcase investor`,
+
+      `Arhan with ID ${uniqueBuyerId()} for Farm Land Expo referral`,
+      `Arhan with ID ${uniqueBuyerId()} for Farm Land Expo investor`,
+
+      `Arhan with ID ${uniqueBuyerId()} for All Projects referral`,
+      `Arhan with ID ${uniqueBuyerId()} for All Projects investor`
+    ];
+
+    for (const prompt of prompts) {
+
+      const response =
+        await request.post(
+          'https://dev.propfocus.in/api/whatsapp-webhook',
+          {
+            data: {
+              event: 'message',
+              data: {
+                from: MAIN_BROKER_PHONE,
+                body: prompt
+              }
+            }
+          }
+        );
+
+      expect(
+        response.status()
+      ).toBe(200);
+
+      const body =
+        await response.json();
+
+      console.log(
+        `\nPrompt: ${prompt}`
+      );
+
+      console.log(
+        JSON.stringify(
+          body,
+          null,
+          2
+        )
+      );
+
+      expect(
+        body.success
+      ).toBe(true);
+
+      expect(
+        body.micrositeUrl
+      ).toBeTruthy();
+    }
   }
 );
