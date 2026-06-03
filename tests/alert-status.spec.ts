@@ -1,7 +1,7 @@
 import { test, expect, APIRequestContext, Page } from '@playwright/test';
 
 const BASE_URL = 'https://dev.propfocus.in';
-const SUB_BROKER_PHONE = '8374095506';
+const SUB_BROKER_PHONE = '9999999999';
 
 const BUYER_NAME = 'Arhan';
 const PROJECT_NAME = 'Abhee Tranquila';
