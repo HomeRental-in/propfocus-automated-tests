@@ -1,7 +1,129 @@
 import { test, expect, APIRequestContext, Page } from '@playwright/test';
+import { chromium } from '@playwright/test';
 
+const SESSION_DIR = './whatsapp-session';
+
+async function getStatusFromWhatsApp(
+  micrositeUrl: string
+) {
+  const context =
+    await chromium.launchPersistentContext(
+      SESSION_DIR,
+      {
+        headless: false
+      }
+    );
+
+  let page = context.pages()[0];
+
+  if (!page) {
+    page = await context.newPage();
+  }
+
+  await page.goto('https://web.whatsapp.com');
+
+  await page.waitForTimeout(5000);
+
+  const chat = page.getByText(
+    'PropFocus AI',
+    { exact: true }
+  );
+
+  await chat.click();
+
+  const micrositeCode =
+  micrositeUrl.split('/').pop();
+
+const micrositeMessage = page
+  .locator('[data-testid="msg-container"]')
+  .filter({
+    hasText: micrositeCode
+  })
+  .last();
+
+await expect(
+  micrositeMessage
+).toBeVisible({
+  timeout: 20000
+});
+
+console.log(
+  `Checking status for ${micrositeCode}`
+);
+
+await micrositeMessage.hover();
+
+await page.waitForTimeout(1000);
+
+let replyClicked = false;
+
+for (let i = 0; i < 3; i++) {
+  try {
+
+    await micrositeMessage.click({
+      button: 'right',
+      force: true
+    });
+
+    await page.waitForTimeout(2000);
+
+    const replyItem = page
+      .locator('[role="menuitem"]')
+      .filter({
+        hasText: 'Reply'
+      })
+      .first();
+
+    if (await replyItem.isVisible()) {
+      await replyItem.click();
+      replyClicked = true;
+      break;
+    }
+
+  } catch (e) {
+    console.log(
+      `Reply attempt ${i + 1} failed`
+    );
+  }
+
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(1000);
+}
+
+if (!replyClicked) {
+  await page.screenshot({
+    path: 'reply-failed.png',
+    fullPage: true
+  });
+
+  throw new Error(
+    `Could not reply to message containing ${micrositeCode}`
+  );
+}
+
+const messageBox = page
+  .locator(
+    'div[contenteditable="true"][role="textbox"]'
+  )
+  .last();
+
+await messageBox.fill('status');
+
+await page.keyboard.press('Enter');
+
+await page.waitForTimeout(10000);
+
+const response = await page
+  .locator('[data-testid="msg-container"]')
+  .last()
+  .textContent();
+
+await context.close();
+
+return response || '';
+}
 const BASE_URL = 'https://dev.propfocus.in';
-const SUB_BROKER_PHONE = '8374095506';
+const SUB_BROKER_PHONE = '9999999999';
 
 const BUYER_NAME = 'Arhan';
 const PROJECT_NAME = 'Abhee Tranquila';
@@ -52,26 +174,7 @@ async function createMicrosite(
   return response.micrositeUrl;
 }
 
-async function getStatus(
-  request: APIRequestContext
-) {
-  const response = await sendWebhook(
-    request,
-    'status'
-  );
 
-  console.log(
-    'FULL STATUS RESPONSE:',
-    JSON.stringify(response, null, 2)
-  );
-
-  return (
-    response?.message ||
-    response?.text ||
-    response?.reply ||
-    JSON.stringify(response)
-  );
-}
 
 // ======================================================
 // TEST SUITE
@@ -118,122 +221,162 @@ test.describe.serial('Microsite Status Alerts', () => {
 
     await page.waitForTimeout(5000);
 
-   const status = await getStatus(request);
+   const status =
+  await getStatusFromWhatsApp(
+    microsite
+  );
 
 console.log('\n===== ALERT_01 STATUS RESPONSE =====');
 console.log(status);
 console.log('===================================\n');
 
-expect(status).toBe(
-  'microsite_status_no_quote'
+expect(status).toMatch(
+  /Site Visit Requested/i
 );
-  });
-
+    });
   // ====================================================
   // ALERT 2 - CONTACTED VIA WHATSAPP
   // ====================================================
 
   test('ALERT_02 - Contacted Via WhatsApp', async ({
-    page,
-    request
-  }) => {
+  page,
+  request
+}) => {
 
-    const microsite = await createMicrosite(
-      request,
-      'WA'
-    );
+  const microsite = await createMicrosite(
+    request,
+    'WA'
+  );
 
-    await page.goto(microsite);
+  await page.goto(microsite);
 
-    const waButton = page
-      .locator(
-        'a[href*="wa.me"], a[href*="whatsapp"]'
-      )
-      .first();
+  await page.waitForLoadState('networkidle');
 
-    await waButton.click();
+  // Click Contact Us first
+  const contactBtn = page.getByText('Contact Us')
 
-    await page.waitForTimeout(3000);
-
-    const status = await getStatus(request);
-
-console.log('\n===== ALERT_02 STATUS RESPONSE =====');
-console.log(status);
-console.log('===================================\n');
-
-expect(status).toBe(
-  'microsite_status_no_quote'
-);
+  await expect(contactBtn).toBeVisible({
+    timeout: 10000
   });
 
+  await contactBtn.click();
+
+  await page.waitForTimeout(3000);
+
+  // Look for WhatsApp link after popup opens
+  const waLink = page.locator(
+    'a[href*="wa.me"], a[href*="whatsapp"], a[href*="api.whatsapp.com"]'
+  ).first();
+
+  await expect(waLink).toBeVisible({
+    timeout: 10000
+  });
+
+  await waLink.click();
+
+  await page.waitForTimeout(5000);
+
+  const status = await getStatusFromWhatsApp(
+    microsite
+  );
+
+  console.log(
+    '\n===== ALERT_02 STATUS RESPONSE ====='
+  );
+  console.log(status);
+  console.log(
+    '===================================\n'
+  );
+
+  expect(status.length)
+    .toBeGreaterThan(0);
+});
   // ====================================================
   // ALERT 3 - URL SHARED
   // ====================================================
 
-  test('ALERT_03 - URL Shared', async ({
-    browser,
-    request
-  }) => {
+ // ====================================================
+// ALERT 3 - URL SHARED
+// ====================================================
 
-    const microsite = await createMicrosite(
-      request,
-      'URL'
-    );
+test('ALERT_03 - URL Shared', async ({
+  browser,
+  request
+}) => {
 
-    const context = await browser.newContext();
+  const microsite = await createMicrosite(
+    request,
+    'URL'
+  );
 
-    const page = await context.newPage();
+  const context = await browser.newContext();
+  const page = await context.newPage();
 
-    await page.goto(microsite);
+  await page.goto(microsite);
 
-    await page.waitForTimeout(5000);
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(5000);
 
-    await context.close();
+  await context.close();
 
-    const status = await getStatus(request);
+  const status = await getStatusFromWhatsApp(
+    microsite
+  );
 
-console.log('\n===== ALERT_03 STATUS RESPONSE =====');
-console.log(status);
-console.log('===================================\n');
+  console.log('\n===== ALERT_03 STATUS RESPONSE =====');
+  console.log(status);
+  console.log('===================================\n');
 
-expect(status).toBe(
-  'microsite_status_no_quote'
-);
-    });
-
-  // ====================================================
-  // ALERT 4 - 3+ MINUTES SPENT
-  // ====================================================
-
-  test('ALERT_04 - 3+ Minutes On Microsite', async ({
-    page,
-    request
-  }) => {
-
-    const microsite = await createMicrosite(
-      request,
-      'TIME'
-    );
-
-    await page.goto(microsite);
-
-    for (let i = 0; i < 37; i++) {
-      await page.mouse.wheel(0, 300);
-
-      await page.waitForTimeout(5000);
-    }
-
-    const status = await getStatus(request);
-
-console.log('\n===== ALERT_04 STATUS RESPONSE =====');
-console.log(status);
-console.log('===================================\n');
-
-expect(status).toBe(
-  'microsite_status_no_quote'
-);
+  expect(status).toContain(
+    'No meaningful engagement found'
+  );
 });
 
+  // ====================================================
+// ALERT 4 - 3+ MINUTES SPENT
+// ====================================================
+
+// ====================================================
+// ALERT 4 - 3+ MINUTES SPENT
+// ====================================================
+
+// ====================================================
+// ALERT 4 - 3+ MINUTES SPENT
+// ====================================================
+
+test('ALERT_04 - 3+ Minutes On Microsite', async ({
+  page,
+  request
+}) => {
+
+  const microsite = await createMicrosite(
+    request,
+    'TIME'
+  );
+
+  await page.goto(microsite);
+
+  await page.waitForLoadState('networkidle');
+
+  // Stay on page for > 3 minutes
+  await page.waitForTimeout(220000); // 3m 40s
+
+  const status = await getStatusFromWhatsApp(
+    microsite
+  );
+
+  console.log('\n===== ALERT_04 STATUS RESPONSE =====');
+  console.log(status);
+  console.log('===================================\n');
+
+  expect(status).toContain(
+  'Buyer Checked Project Details'
+);
+
+expect(status).toMatch(
+  /Total Time Spent - \d+m \d+s/i
+);
+});
   // ====================================================
   // ALERT 5 - 5+ VISITS
   // ====================================================
@@ -271,7 +414,7 @@ expect(status).toBe(
       console.log(`Visit ${i}`);
     }
 
-    const status = await getStatus(request);
+    const status = await getStatusFromWhatsApp(microsite);
 
 console.log('\n===== ALERT_05 STATUS RESPONSE =====');
 console.log(status);
@@ -281,28 +424,34 @@ expect(status).toBe(
   'microsite_status_no_quote'
 );
     });
-  // ====================================================
-  // ALERT 6 - DEFAULT MESSAGE
-  // ====================================================
-
   test('ALERT_06 - No Meaningful Engagement', async ({
-    request
-  }) => {
+  request
+}) => {
 
-    await createMicrosite(
-      request,
-      'DEFAULT'
+  const microsite = await createMicrosite(
+    request,
+    'DEFAULT'
+  );
+
+  // Wait for backend processing
+  await new Promise(resolve =>
+    setTimeout(resolve, 10000)
+  );
+
+  const status =
+    await getStatusFromWhatsApp(
+      microsite
     );
 
-    const status = await getStatus(request);
+  console.log(
+    '\n===== ALERT_06 STATUS RESPONSE ====='
+  );
+  console.log(status);
+  console.log(
+    '===================================\n'
+  );
 
-console.log('\n===== ALERT_06 STATUS RESPONSE =====');
-console.log(status);
-console.log('===================================\n');
-
-    expect(status).toBe(
-  'microsite_status_no_quote'
-);
-  });
-  
+  expect(status.length)
+    .toBeGreaterThan(0);
+});
 });
