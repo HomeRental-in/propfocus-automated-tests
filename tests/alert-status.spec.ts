@@ -1,7 +1,7 @@
 import { test, expect, APIRequestContext, Page } from '@playwright/test';
 
 const BASE_URL = 'https://dev.propfocus.in';
-const SUB_BROKER_PHONE = '9999999999';
+const SUB_BROKER_PHONE = '8374095506';
 
 const BUYER_NAME = 'Arhan';
 const PROJECT_NAME = 'Abhee Tranquila';
@@ -229,8 +229,8 @@ console.log('\n===== ALERT_04 STATUS RESPONSE =====');
 console.log(status);
 console.log('===================================\n');
 
-expect(status).toMatch(
-  /time|minute|min/i
+expect(status).toBe(
+  'microsite_status_no_quote'
 );
 });
 
