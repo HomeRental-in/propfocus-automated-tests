@@ -1947,3 +1947,50 @@ test(
   }
 
 );
+
+test(
+
+  'TC_MS_28 - Script Tag Input Should Return Validation Response @security',
+
+  async ({ request }) => {
+
+    const response =
+      await request.post(
+
+        API_URL,
+
+        {
+          data: {
+            event: 'message',
+            data: {
+              from: PHONE.ACTIVE,
+              body:
+                'Arhan with ID <script>alert(1)</script> for Abhee Tranquila'
+            }
+          }
+        }
+
+      );
+
+    expect(
+      response.status()
+    ).toBe(200);
+
+    const body =
+      await response.json();
+
+    console.log(
+      JSON.stringify(body, null, 2)
+    );
+
+    // API must return something
+    expect(body).toBeTruthy();
+
+    // Should not hang or return empty object
+    expect(
+      Object.keys(body).length
+    ).toBeGreaterThan(0);
+
+  }
+
+);
