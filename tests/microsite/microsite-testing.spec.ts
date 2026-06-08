@@ -1914,3 +1914,36 @@ test(
   }
 
 );
+
+test(
+
+  'TC_MS_27 - HTML Injection In Buyer ID Validation @security',
+
+  async ({ request }) => {
+
+    const { responseBody } =
+      await sendMicrositeRequest(
+
+        request,
+
+        'Arhan with ID <script>alert(1)</script> for Abhee Tranquila'
+
+      );
+
+    console.log(
+      JSON.stringify(responseBody, null, 2)
+    );
+
+    // System should never silently fail
+    expect(
+      responseBody
+    ).toBeTruthy();
+
+    // Either success OR explicit validation message
+    expect(
+      responseBody.message
+    ).toBeTruthy();
+
+  }
+
+);
