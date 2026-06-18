@@ -459,7 +459,7 @@ const nlpFormatCases: NlpFormatCase[] = [
     expectedFields: { buyerName: BUYER_NAME },
   },
   {
-    name: 'NLP_34 - RNR suffix',
+    name: 'NLP_33 - RNR suffix',
     tags: '@regression',
     validateRNR: true,
     buildBody: ({ buyerName, buyerId, project }) =>
@@ -467,12 +467,42 @@ const nlpFormatCases: NlpFormatCase[] = [
     expectedFields: { buyerName: BUYER_NAME, projectName: PROJECT },
   },
   {
-    name: 'NLP_35 - Emoji prefix',
+    name: 'NLP_34 - Emoji prefix',
     tags: '@regression',
     buildBody: ({ buyerName, buyerId, project }) =>
       `🏠 ${buyerName} ${buyerId} for ${project}`,
     expectedFields: { buyerName: BUYER_NAME, projectName: PROJECT },
   },
+  {
+  name: 'NLP_35 - Lowercase buyer name and project',
+  tags: '@regression',
+  buildBody: ({ buyerId, project }) =>
+    `harsha ${buyerId} for ${project.toLowerCase()}`,
+  expectedFields: {
+    buyerName: BUYER_NAME,
+    projectName: PROJECT,
+  },
+},
+{
+  name: 'NLP_36 - Uppercase buyer name and project',
+  tags: '@regression',
+  buildBody: ({ buyerId, project }) =>
+    `HARSHA ${buyerId} FOR ${project.toUpperCase()}`,
+  expectedFields: {
+    buyerName: BUYER_NAME,
+    projectName: PROJECT,
+  },
+},
+{
+  name: 'NLP_37 - Mixed case input',
+  tags: '@regression',
+  buildBody: ({ buyerId, project }) =>
+    `HaRsHa ${buyerId} FoR ${project}`,
+  expectedFields: {
+    buyerName: BUYER_NAME,
+    projectName: PROJECT,
+  },
+},
 ];
 
 // Invalid / missing buyer ID cases live in microsite-generation.spec.ts

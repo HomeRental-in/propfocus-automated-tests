@@ -1341,6 +1341,109 @@ test.describe('Site Visits Scheduled — Cross-Tab Count Consistency', () => {
   );
   
 });
+test(
+  'TC_OVERVIEW_01 - Site Visit metrics should match between Overview and All Leads @regression',
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    // =========================
+    // OVERVIEW PAGE
+    // =========================
+
+    await page.getByText(
+      'Overview',
+      { exact: true }
+    ).click();
+
+    await page.waitForLoadState('networkidle');
+
+    const overviewCard = page.locator('div').filter({
+      has: page.getByText('Site visits scheduled')
+    }).first();
+
+    const overviewText =
+      await overviewCard.textContent() ?? '';
+
+    console.log(
+      'OVERVIEW CARD:',
+      overviewText
+    );
+
+    const overviewScheduled =
+      Number(
+        overviewText.match(
+          /Site visits scheduled\s*(\d+)/i
+        )?.[1] ?? 0
+      );
+
+    const overviewConducted =
+      Number(
+        overviewText.match(
+          /Conducted\s*(\d+)/i
+        )?.[1] ?? 0
+      );
+
+    console.log(
+      `Overview -> Scheduled=${overviewScheduled}, Conducted=${overviewConducted}`
+    );
+
+    // =========================
+    // ALL LEADS PAGE
+    // =========================
+
+    await page.getByText(
+      'All Leads',
+      { exact: true }
+    ).click();
+
+    await page.waitForLoadState('networkidle');
+
+    const allLeadsCard = page.locator('div').filter({
+      has: page.getByText('Site Visits')
+    }).first();
+
+    const allLeadsText =
+      await allLeadsCard.textContent() ?? '';
+
+    console.log(
+      'ALL LEADS CARD:',
+      allLeadsText
+    );
+
+    const allLeadsScheduled =
+      Number(
+        allLeadsText.match(
+          /Scheduled\s*(\d+)/i
+        )?.[1] ?? 0
+      );
+
+    const allLeadsConducted =
+      Number(
+        allLeadsText.match(
+          /Conducted\s*(\d+)/i
+        )?.[1] ?? 0
+      );
+
+    console.log(
+      `All Leads -> Scheduled=${allLeadsScheduled}, Conducted=${allLeadsConducted}`
+    );
+
+    expect(
+      allLeadsScheduled,
+      'Scheduled count mismatch between Overview and All Leads'
+    ).toBe(
+      overviewScheduled
+    );
+
+    expect(
+      allLeadsConducted,
+      'Conducted count mismatch between Overview and All Leads'
+    ).toBe(
+      overviewConducted
+    );
+  }
+);
 //rescheduling
 const API_URL =
   'https://dev.propfocus.in/api/whatsapp-webhook';
@@ -1571,7 +1674,7 @@ console.log(`Selected date: ${futureDate}`);
 // TEST
 // ======================================================
 
-test.only(
+test(
   'TC_DASH_RESCHEDULE_01 - Rescheduled KPI updates after rescheduling a visit @regression',
 
   async ({
@@ -1691,6 +1794,308 @@ await page.waitForTimeout(
       afterRate
     ).toBeGreaterThanOrEqual(
       beforeRate
+    );
+  }
+);
+
+//Leads filters//
+
+test(
+  'TC_ALLLEADS_05 - 5+ time spend filter should only show leads with time spent > 5 mins @regression',
+
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await page.getByRole('button', {
+      name: 'All Leads'
+    }).click();
+
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', {
+      name: 'All',
+      exact: true
+    }).click();
+
+    await page.waitForTimeout(2000);
+
+    await page.getByRole('button', {
+  name: /status/i
+}).click();
+
+    await page.getByText(
+      '5+ time spend',
+      { exact: true }
+    ).click();
+
+    await page.waitForTimeout(3000);
+
+    await page.keyboard.press('Escape');
+
+    // Scroll to bottom because Time Spent column is towards the end
+    for (let i = 0; i < 5; i++) {
+      await page.mouse.wheel(3000, 0);
+      await page.waitForTimeout(500);
+    }
+
+    await page.waitForTimeout(2000);
+
+    const table = page.locator('table').first();
+
+    const tableText =
+      await table.innerText();
+
+    console.log('\n════ TABLE DATA ════');
+    console.log(tableText);
+
+    const timeValues =
+      tableText.match(/\d+m\s*\d+s/g) ?? [];
+
+    console.log('\n════ TIME SPENT VALUES ════');
+    console.log(timeValues);
+
+    expect(
+      timeValues.length,
+      'No time values found after applying 5+ time spend filter'
+    ).toBeGreaterThan(0);
+
+    for (const value of timeValues) {
+
+      const match =
+        value.match(/(\d+)m\s*(\d+)s/);
+
+      if (!match) continue;
+
+      const totalSeconds =
+        Number(match[1]) * 60 +
+        Number(match[2]);
+
+      console.log(
+        `${value} = ${totalSeconds}s`
+      );
+
+      expect(
+        totalSeconds,
+        `${value} is not greater than 5 minutes`
+      ).toBeGreaterThan(300);
+    }
+
+    console.log(
+      '\n✓ All returned leads have Time Spent > 5 minutes'
+    );
+  }
+);
+
+test(
+  'TC_DASH_RESCHEDULE_02 - Rescheduled KPI updates after rescheduling a visit @regression',
+
+  async ({ page, request, context }) => {
+
+    // ============================
+    // Generate fresh site visit
+    // ============================
+
+    const visitorLink =
+      await generateSiteVisitLink(request);
+
+    // ============================
+    // Login
+    // ============================
+
+    await login(page, PHONE.MAIN);
+
+    await page.getByText(
+      'Site Visit Tracker',
+      { exact: true }
+    ).click();
+
+    await page.waitForLoadState('networkidle');
+
+    // ============================
+    // BEFORE VALUES
+    // ============================
+
+    const beforeRescheduled =
+      await readRescheduledCount(page);
+
+    const beforeRate =
+      await readRescheduleRate(page);
+
+    console.log(
+      `Before -> Rescheduled=${beforeRescheduled}, Rate=${beforeRate}%`
+    );
+
+    // ============================
+    // Reschedule Visit
+    // ============================
+
+    const visitorPage =
+      await context.newPage();
+
+    await visitorPage.goto(visitorLink);
+
+    await visitorPage.waitForLoadState(
+      'networkidle'
+    );
+
+    await visitorPage.getByText(
+      'Reschedule Visit',
+      { exact: true }
+    ).click();
+
+    // Modal should open
+
+    const tomorrow = new Date();
+
+    tomorrow.setDate(
+      tomorrow.getDate() + 1
+    );
+
+    const futureDate =
+      tomorrow.toISOString().split('T')[0];
+
+    const modal =
+      visitorPage.getByRole('dialog');
+
+    await modal
+      .locator('input[type="date"]')
+      .fill(futureDate);
+
+    console.log(
+      `Selected date: ${futureDate}`
+    );
+
+    await visitorPage.getByRole('button', {
+      name: /request reschedule/i
+    }).click();
+
+    console.log(
+      'Reschedule submitted ✓'
+    );
+
+    await visitorPage.close();
+
+    // ============================
+    // Wait for dashboard sync
+    // ============================
+
+    let afterRescheduled =
+      beforeRescheduled;
+
+    let afterRate =
+      beforeRate;
+
+    for (
+      let attempt = 1;
+      attempt <= 10;
+      attempt++
+    ) {
+
+      console.log(
+        `Refresh attempt ${attempt}`
+      );
+
+      await page.waitForTimeout(
+        10000
+      );
+
+      await page.reload();
+
+      await page.waitForLoadState(
+        'networkidle'
+      );
+
+      afterRescheduled =
+        await readRescheduledCount(
+          page
+        );
+
+      afterRate =
+        await readRescheduleRate(
+          page
+        );
+
+      console.log(
+        `Attempt ${attempt} -> Rescheduled=${afterRescheduled}, Rate=${afterRate}%`
+      );
+
+      if (
+        afterRescheduled >
+          beforeRescheduled ||
+        afterRate > beforeRate
+      ) {
+        break;
+      }
+    }
+
+    console.log(
+      `After -> Rescheduled=${afterRescheduled}, Rate=${afterRate}%`
+    );
+
+    // ============================
+    // Validation
+    // ============================
+
+    expect(
+      afterRescheduled,
+      'Rescheduled KPI did not increase after rescheduling visit'
+    ).toBeGreaterThan(
+      beforeRescheduled
+    );
+
+    expect(
+      afterRate,
+      'Reschedule rate did not update after rescheduling visit'
+    ).toBeGreaterThan(
+      beforeRate
+    );
+  }
+);
+
+test.only(
+  'TC_ALLLEADS_06 - Multiple buyer segment filters should use AND logic @regression',
+  async ({ page }) => {
+
+    await login(page, PHONE.MAIN);
+
+    await page.getByRole('button', {
+      name: 'All Leads'
+    }).click();
+
+    await page.waitForLoadState('networkidle');
+
+    await page.getByRole('button', {
+      name: 'All',
+      exact: true
+    }).click();
+
+    await page.waitForTimeout(2000);
+
+    // Open Status filter ONCE
+    await page.getByRole('button', {
+      name: /status/i
+    }).click();
+
+    // Select 3+ visits
+    await page.getByText(
+      '3+ visits',
+      { exact: true }
+    ).click();
+
+    // Select 5+ time spend
+    await page.getByText(
+      '5+ time spend',
+      { exact: true }
+    ).click();
+
+    // Close filter popup
+    await page.keyboard.press('Escape');
+
+    await page.waitForTimeout(3000);
+
+    console.log(
+      await page.locator('body').innerText()
     );
   }
 );
