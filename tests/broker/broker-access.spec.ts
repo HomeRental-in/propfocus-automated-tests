@@ -164,7 +164,7 @@ test.describe('Broker access — microsite all projects', () => {
       `BRK_MS_SUSPENDED - ${project.name} blocked @regression`,
 
       async ({ request }) => {
-        test.fail();
+        
 
         const buyerId = uniqueBuyerId();
         const body = await sendBrokerWebhook(
@@ -245,7 +245,7 @@ test.describe('Broker access — site visit all projects', () => {
       `BRK_SV_SUSPENDED - ${project.name} blocked @regression`,
 
       async ({ request }) => {
-        test.fail();
+        
 
         const buyerId = uniqueBuyerId();
         const body = await bookSiteVisitForBroker(
@@ -269,46 +269,64 @@ test.describe('Broker access — site visit via project aliases', () => {
   for (const project of ALL_SUCCESS_PROJECTS) {
     for (const alias of project.aliases ?? []) {
       test(
-        `BRK_SV_ALIAS_MAIN - "${alias}" → ${project.name} @regression`,
+  `BRK_SV_ALIAS_MAIN - "${alias}" → ${project.name} @regression`,
 
-        async ({ request }) => {
-          const buyerId = uniqueBuyerId();
-          await ensureMicrositeForBroker(
-            request,
-            BROKER_PHONE.MAIN_BROKER,
-            BUYER_NAME,
-            buyerId,
-            project.name
-          );
-          const body = await bookSiteVisitForBroker(
-            request,
-            BROKER_PHONE.MAIN_BROKER,
-            `${BUYER_NAME} ${buyerId} for sv ${alias} ${SITE_VISIT_DEFAULT_SLOT}`
-          );
-          assertSiteVisitAllowed(body);
-        }
-      );
+  async ({ request }) => {
+    const buyerId = uniqueBuyerId();
+
+    await ensureMicrositeForBroker(
+      request,
+      BROKER_PHONE.MAIN_BROKER,
+      BUYER_NAME,
+      buyerId,
+      project.name
+    );
+
+    const body = await bookSiteVisitForBroker(
+      request,
+      BROKER_PHONE.MAIN_BROKER,
+      `${BUYER_NAME} ${buyerId} for sv ${alias} ${SITE_VISIT_DEFAULT_SLOT}`
+    );
+
+    console.log('\n========== ALIAS RESPONSE ==========');
+    console.log(`Project : ${project.name}`);
+    console.log(`Alias   : ${alias}`);
+    console.log(JSON.stringify(body, null, 2));
+    console.log('===================================\n');
+
+    assertSiteVisitAllowed(body);
+  }
+);
 
       test(
-        `BRK_SV_ALIAS_SUB - "${alias}" → ${project.name} @regression`,
+  `BRK_SV_ALIAS_SUB - "${alias}" → ${project.name} @regression`,
 
-        async ({ request }) => {
-          const buyerId = uniqueBuyerId();
-          await ensureMicrositeForBroker(
-            request,
-            BROKER_PHONE.SUB_BROKER,
-            BUYER_NAME,
-            buyerId,
-            project.name
-          );
-          const body = await bookSiteVisitForBroker(
-            request,
-            BROKER_PHONE.SUB_BROKER,
-            `${BUYER_NAME} ${buyerId} for sv ${alias} ${SITE_VISIT_DEFAULT_SLOT}`
-          );
-          assertSiteVisitAllowed(body);
-        }
-      );
+  async ({ request }) => {
+    const buyerId = uniqueBuyerId();
+
+    await ensureMicrositeForBroker(
+      request,
+      BROKER_PHONE.SUB_BROKER,
+      BUYER_NAME,
+      buyerId,
+      project.name
+    );
+
+    const body = await bookSiteVisitForBroker(
+      request,
+      BROKER_PHONE.SUB_BROKER,
+      `${BUYER_NAME} ${buyerId} for sv ${alias} ${SITE_VISIT_DEFAULT_SLOT}`
+    );
+
+    console.log('\n========== ALIAS RESPONSE ==========');
+    console.log(`Project : ${project.name}`);
+    console.log(`Alias   : ${alias}`);
+    console.log(JSON.stringify(body, null, 2));
+    console.log('===================================\n');
+
+    assertSiteVisitAllowed(body);
+  }
+);
     }
   }
 });
