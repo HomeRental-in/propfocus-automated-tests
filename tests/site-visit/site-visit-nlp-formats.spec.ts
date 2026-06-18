@@ -289,6 +289,36 @@ const svNlpFormatCases: SvNlpFormatCase[] = [
     buildBody: ({ buyerName, project, visitSlot }) =>
       `${buyerName} ${SITE_VISIT_LEGACY_BUYER_ID} for sv ${project} ${visitSlot}`,
   },
+  {
+  name: 'SV_NLP_17 - Lowercase input',
+  tags: '@regression',
+  buildBody: ({ buyerId, project }) =>
+    `harsha ${buyerId.toLowerCase()} for sv ${project.toLowerCase()} tomorrow 11 am`,
+},
+{
+  name: 'SV_NLP_18 - Uppercase input',
+  tags: '@regression',
+  buildBody: ({ buyerId, project }) =>
+    `HARSHA ${buyerId.toUpperCase()} FOR SV ${project.toUpperCase()} TOMORROW 11 AM`,
+},
+{
+  name: 'SV_NLP_19 - Mixed case input',
+  tags: '@regression',
+  buildBody: ({ buyerId, project }) =>
+    `HaRsHa ${buyerId} FoR Sv ${project} ToMoRrOw 11 Am`,
+},
+{
+  name: 'SV_NLP_20 - Conversational noise text',
+  tags: '@regression',
+  buildBody: ({ buyerName, buyerId, project }) =>
+    `Hi team, please book a site visit for ${buyerName} ${buyerId} at ${project} tomorrow 11 AM. Thanks.`,
+},
+{
+  name: 'SV_NLP_21 - Urgent request text',
+  tags: '@regression',
+  buildBody: ({ buyerName, buyerId, project }) =>
+    `Need this urgently. ${buyerName} ${buyerId} for sv ${project} tomorrow.`,
+},
 ];
 
 // Relative and absolute date/time phrases brokers commonly type
