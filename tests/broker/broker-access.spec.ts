@@ -106,7 +106,7 @@ const CROSS_BROKER_CASES = [
     micrositePhone: BROKER_PHONE.SUB_BROKER,
     svPhone: BROKER_PHONE.SUSPENDED,
     expectSvAllowed: false,
-    knownDevGap: true,
+    
   },
 ] as const;
 
@@ -399,7 +399,7 @@ test.describe('Broker access — blocked brokers cannot chain microsite + SV', (
   test('BRK_CHAIN_SUSPENDED - microsite should be blocked @regression', async ({
     request,
   }) => {
-    test.fail();
+    
 
     const buyerId = uniqueBuyerId();
     const ms = await sendBrokerWebhook(
