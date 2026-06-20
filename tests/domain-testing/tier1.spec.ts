@@ -344,15 +344,21 @@ test.describe.serial(
       'networkidle'
     );
 
-    await page
-      .getByRole('button', {
-        name: /View Details/i
-      })
-      .click();
+   const exploreBtn = page.getByText(
+  /Explore the project/i
+);
 
-    await page.waitForTimeout(
-      10000
-    );
+await expect(
+  exploreBtn
+).toBeVisible({
+  timeout: 10000
+});
+
+await exploreBtn.click();
+
+await page.waitForTimeout(
+  3000
+);
 
     await login(page);
 
@@ -381,7 +387,7 @@ test.describe.serial(
     await expect(
       leadRow
     ).toContainText(
-      'Project Details Viewed'
+      'Project Details'
     );
 
     console.log(
