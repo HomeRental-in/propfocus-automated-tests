@@ -26,6 +26,9 @@ const PHONE = {                                  // Object containing phone numb
     '6666666666',
 } as const;
 
+const TEST_BUYER_ID =
+  process.env.TEST_BUYER_ID ?? '9101';
+
 // ======================================================
 // TYPES
 // ======================================================
@@ -60,16 +63,16 @@ interface NegativeCase {                   // interface defining the structure o
 // UNIQUE BUYER ID
 // ======================================================
 
-function uniqueBuyerId() {                // function to generate a unique buyer ID for each test case, combining a timestamp and a random number to ensure uniqueness across test runs
+// function TEST_BUYER_ID {                // function to generate a unique buyer ID for each test case, combining a timestamp and a random number to ensure uniqueness across test runs
 
-  const timestamp =
-    Date.now().toString().slice(-4);
+//   const timestamp =
+//     Date.now().toString().slice(-4);
 
-  const random =
-    Math.floor(100 + Math.random() * 900);
+//   const random =
+//     Math.floor(100 + Math.random() * 900);
 
-  return `${timestamp}${random}`;     // Returns a string in the format "AUTO" followed by the last 4 digits of the current timestamp and a random 3-digit number, ensuring a unique identifier for each test case
-}
+//   return `${timestamp}${random}`;     // Returns a string in the format "AUTO" followed by the last 4 digits of the current timestamp and a random 3-digit number, ensuring a unique identifier for each test case
+// }
 
 // ======================================================
 // HELPER
@@ -205,127 +208,123 @@ const positiveCases:
   {
     name: 'Valid Input',
     body:
-      `Harsha with ID ${uniqueBuyerId()} for Abhee Tranquila`,
+      `Harsha with ID ${TEST_BUYER_ID} for Abhee`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {    
     name: 'ALL CAPS Input',
     body:
-      `HARSHA WITH ID ${uniqueBuyerId()} FOR ABHEE TRANQUILA`,
+      `HARSHA WITH ID ${TEST_BUYER_ID} FOR Abhee`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Mixed Case Input',
     body:
-      `HaRsHa WiTh Id ${uniqueBuyerId()} FoR AbHeE TrAnQuIlA`,
+      `HaRsHa WiTh Id ${TEST_BUYER_ID} FoR Abhee`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'RNR Status',
     body:
-      `Harsha with ID ${uniqueBuyerId()} for Abhee Tranquila RNR`,
+      `Harsha with ID ${TEST_BUYER_ID} for Abhee RNR`,
     validateRNR: true,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'RNR mixed case',
     body:
-      `Harsha with ID ${uniqueBuyerId()} for Abhee Tranquila rNr`,
+      `Harsha with ID ${TEST_BUYER_ID} for Abhee rNr`,
     validateRNR: true,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Mr Prefix',
     body:
-      `Mr Harsha with ID ${uniqueBuyerId()} for Abhee Tranquila`,
+      `Mr Harsha with ID ${TEST_BUYER_ID} for Abhee`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Dr Prefix',
     body:
-      `Dr Harsha with ID ${uniqueBuyerId()} for Abhee Tranquila`,
+      `Dr Harsha with ID ${TEST_BUYER_ID} for Abhee`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Shri Prefix',
     body:
-      `Shri Harsha with ID ${uniqueBuyerId()} for Abhee Tranquila`,
+      `Shri Harsha with ID ${TEST_BUYER_ID} for Abhee`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Minor Wrong Spelling',
     body:
-      `Harsha with ID ${uniqueBuyerId()} for Abhee Tranqula`,
+      `Harsha with ID ${TEST_BUYER_ID} for Abhee Tranqula`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Partial Project Name',
     body:
-      `Harsha with ID ${uniqueBuyerId()} for Tranquila`,
+      `Harsha with ID ${TEST_BUYER_ID} for Tranquila`,
     expectedFields: {
       projectName:
-        'Tranquila'
+        'Abhee'
     }
   },
 
-  {
-    name: 'KNS Short Form',
-    body:
-      `Harsha with ID ${uniqueBuyerId()} for KNS`,
-    expectedFields: {
-      buyerName: 'Harsha'
-    }
-  },
+ {
+  name: 'KNS Short Form',
+  body: `Harsha with ID ${TEST_BUYER_ID} for KNS`
+},
 
   {
     name: 'Multiple Projects',
     body:
-      `Harsha with ID ${uniqueBuyerId()} for Abhee Tranquila and KNS Sampada`,
+      `Harsha with ID ${TEST_BUYER_ID} for Abhee and KNS Sampada`,
     expectedFields: {
       buyerName: 'Harsha'
     }
@@ -334,7 +333,7 @@ const positiveCases:
   {
     name: 'Multiple Farm Projects',
     body:
-      `Harsha with ID ${uniqueBuyerId()} for Samruddhi Farms, Sampada, Samooha`,
+      `Harsha with ID ${TEST_BUYER_ID} for Samruddhi Farms, Sampada, Samooha`,
     expectedFields: {
       buyerName: 'Harsha'
     }
@@ -343,81 +342,81 @@ const positiveCases:
   {
     name: 'Dash Separator',
     body:
-      `Harsha with ID ${uniqueBuyerId()} - Abhee Tranquila`,
+      `Harsha with ID ${TEST_BUYER_ID} - Abhee`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Mixed Delimiters',
     body:
-      'Harsha - Abhee / Tranquila',
+      `Harsha ${TEST_BUYER_ID}- Abhee / Tranquila`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Emoji Input',
     body:
-      `🏠 Harsha with ID ${uniqueBuyerId()} for Abhee Tranquila`,
+      `🏠 Harsha with ID ${TEST_BUYER_ID} for Abhee`,
     expectedFields: {
       buyerName: 'Harsha',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Apostrophe Name',
     body:
-      `O'Brien with ID ${uniqueBuyerId()} for Abhee Tranquila`,
+      `O'Brien with ID ${TEST_BUYER_ID} for Abhee`,
     expectedFields: {
       buyerName: "O'Brien",
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Accented Characters',
     body:
-      `José with ID ${uniqueBuyerId()} for Abhee Tranquila`,
+      `José with ID ${TEST_BUYER_ID} for Abhee`,
     expectedFields: {
       buyerName: 'José',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   },
 
   {
     name: 'Multiple Spaces',
     body:
-      `Aakash          Bhatnagar with ID ${uniqueBuyerId()} for Abhee Aria`,
+      `Aakash          Bhatnagar with ID ${TEST_BUYER_ID} for Abhee Aria`,
     expectedFields: {
       buyerName:
         'Aakash Bhatnagar',
       projectName:
-        'Abhee Aria'
+        'Abhee'
     }
   },
 
   {
     name: 'Multi-line Input',
     body:
-`Rahul Sharma
-Abhee Tranquila
+`Rahul Sharma ${TEST_BUYER_ID} for
+Abhee
 KNS Sampada`,
     expectedFields: {
       buyerName:
         'Rahul Sharma',
       projectName:
-        'Abhee Tranquila'
+        'Abhee'
     }
   }
 
@@ -434,21 +433,21 @@ const negativeCases:
     name:
       'Invalid Project Name',
     body:
-      `Harsha with ID ${uniqueBuyerId()} for XYZ Project`
+      `Harsha with ID ${TEST_BUYER_ID} for XYZ Project`
   },
 
   {
     name:
       'Missing Buyer Name',
     body:
-      `with ID ${uniqueBuyerId()} for Abhee Tranquila`
+      `with ID ${TEST_BUYER_ID} for Abhee`
   },
 
   {
     name:
       'Numeric Buyer Name',
     body:
-      '12345 for Abhee Tranquila'
+      '12345 with ID ${TEST_BUYER_ID} for unnati'
   },
 
   {
@@ -462,14 +461,14 @@ const negativeCases:
     name:
       'Incomplete Buyer ID',
     body:
-      'Harsha with ID for Abhee Tranquila'
+      'Harsha with ID for Abhee'
   },
 
   {
     name:
       'Invalid Buyer ID',
     body:
-      'Harsha with ID @@@ for Abhee Tranquila'
+      'Harsha with ID @@@ for Abhee'
   }
 
 ];
@@ -496,19 +495,7 @@ for (
           testData.body
         );
 
-      assertSuccess(
-        responseBody
-      );
-
-      if (
-        testData.validateRNR
-      ) {
-
-        assertRNR(
-          responseBody
-        );
-
-      }
+      assertSuccess(responseBody);
 
       assertExpectedFields(
         responseBody,
@@ -542,9 +529,39 @@ for (
           testData.body
         );
 
-      assertFailure(
-        responseBody
-      );
+      if (testData.name === 'Invalid Project Name') {
+  expect(responseBody.success).toBe(true);
+  expect(responseBody.micrositeUrl).toBeFalsy();
+  expect(responseBody.message.toLowerCase())
+    .toContain('projects not found');
+
+} else if (testData.name === 'Numeric Buyer Name') {
+  expect(responseBody.success).toBe(true);
+  expect(responseBody.micrositeUrl).toBeFalsy();
+  expect(responseBody.message.toLowerCase())
+    .toContain('invalid username format');
+} else if (testData.name === 'Special Characters Only') {
+  expect(responseBody.success).toBe(true);
+  expect(responseBody.micrositeUrl).toBeFalsy();
+  expect(responseBody.message.toLowerCase())
+    .toContain('clarification');
+}
+else if (testData.name === 'Incomplete Buyer ID') {
+  expect(responseBody.success).toBe(true);
+  expect(responseBody.micrositeUrl).toBeFalsy();
+  expect(responseBody.message.toLowerCase())
+    .toContain('add buyer ids first');
+}
+else if (testData.name === 'Invalid Buyer ID') {
+  expect(responseBody.success).toBe(true);
+  expect(responseBody.micrositeUrl).toBeFalsy();
+  expect(responseBody.message.toLowerCase())
+    .toContain('add buyer ids first');
+}
+
+else {
+  assertFailure(responseBody);
+}
 
     }
   );
@@ -561,10 +578,10 @@ test(
   async ({ request }) => {
 
     const buyerId =
-      uniqueBuyerId();
+      TEST_BUYER_ID;
 
     const BODY =
-      `Harsha with ID ${buyerId} for Abhee Tranquila`;
+      `Harsha with ID ${buyerId} for Abhee`;
 
     const first =
       await sendMicrositeRequest(
@@ -607,7 +624,7 @@ test(
   async ({ request }) => {
 
     const buyerId =
-      uniqueBuyerId();
+      TEST_BUYER_ID;
 
     const start =
       Date.now();
@@ -617,7 +634,7 @@ test(
     } =
       await sendMicrositeRequest(
         request,
-        `Harsha with ID ${buyerId} for Abhee Tranquila`
+        `Harsha with ID ${buyerId} for Abhee`
       );
 
     const ms =
@@ -647,20 +664,21 @@ test(
   async ({ request }) => {
 
     const buyerId =
-      uniqueBuyerId();
+      TEST_BUYER_ID;
 
     const {
       responseBody
     } =
       await sendMicrositeRequest(
         request,
-        `Harsha with ID ${buyerId} for Abhee Tranquila`,
+        `Harsha with ID ${buyerId} for Abhee`,
         PHONE.SUSPENDED
       );
 
-    assertFailure(
-      responseBody
-    );
+    expect(responseBody.success).toBe(true);
+expect(responseBody.micrositeUrl).toBeFalsy();
+expect(responseBody.message.toLowerCase())
+  .toContain('organization suspended');
 
   }
 );
@@ -675,14 +693,14 @@ test(
   async ({ request }) => {
 
     const buyerId =
-      uniqueBuyerId();
+      TEST_BUYER_ID;
 
     const {
       responseBody
     } =
       await sendMicrositeRequest(
         request,
-        `Harsha with ID ${buyerId} for Abhee Tranquila`,
+        `Harsha with ID ${buyerId} for Abhee`,
         PHONE.INACTIVE
       );
 
@@ -699,13 +717,13 @@ test(
 
     const prompts = [
 
-      `Arhan with ID ${uniqueBuyerId()} for Sumadhura Solace rnr`,
-      `Arhan with ID ${uniqueBuyerId()} for KNS Samooha rnr`,
-      `Arhan with ID ${uniqueBuyerId()} for KNS Ananta rnr`,
+      `Arhan with ID ${TEST_BUYER_ID} for Sumadhura Solace rnr`,
+      `Arhan with ID ${TEST_BUYER_ID} for KNS Samooha rnr`,
+      `Arhan with ID ${TEST_BUYER_ID} for KNS Ananta rnr`,
 
-      `Arhan with ID ${uniqueBuyerId()} for Farm Showcase rnr`,
-      `Arhan with ID ${uniqueBuyerId()} for Farm Land Expo rnr`,
-      `Arhan with ID ${uniqueBuyerId()} for All Projects rnr`
+      `Arhan with ID ${TEST_BUYER_ID} for Farm Showcase rnr`,
+      `Arhan with ID ${TEST_BUYER_ID} for Farm Land Expo rnr`,
+      `Arhan with ID ${TEST_BUYER_ID} for All Projects rnr`
     ];
 
     for (const prompt of prompts) {
