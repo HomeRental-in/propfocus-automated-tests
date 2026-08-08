@@ -70,6 +70,41 @@ Flow covered:
 8. Open generated URL in new tab
 9. Validate buyer name on live microsite
 
+## Coverage (expanded suite)
+
+The suite now covers all four buyer-link types and the dashboard/admin surfaces.
+New areas and their spec files:
+
+| Area | Spec file(s) | How it verifies |
+|------|--------------|-----------------|
+| Post-visit creation (standalone + phased, tags, accessibility, reuse, negatives) | `tests/post-visit/post-visit-creation.spec.ts` | WhatsApp webhook → `linkToken`/`postVisitUrl` |
+| EOI creation (campaign project, reuse, no-campaign/negatives) | `tests/eoi/eoi-creation.spec.ts` | WhatsApp webhook → `linkToken`/`eoiUrl` |
+| Tracking on all 4 pages | `tests/tracking/buyer-link-tracking.spec.ts` | `POST /track-event` + `/site-visit|post-visit|eoi/:token/activity`, read back via `/microsite/:id/events` and page GETs |
+| Themes (project-theme overrides + EOI hola) + theme-agnostic tracking | `tests/themes/theme-coverage.spec.ts` | Page render + `?projectTheme=` override + tracking still fires |
+| Buyer links across tier 1/2/3 domains | `tests/domain-testing/tier-buyer-links.spec.ts` | Asserts `postVisitUrl`/`eoiUrl` match each tier's URL shape |
+| Broker alerts | `tests/alerts/broker-alerts.spec.ts` | Admin `engagement-alert-audit` / `visitor-alert-audit` (alerts are WhatsApp-only, verified via backend audit) |
+| Dashboard real-time (60s polling) | `tests/dashboard/realtime-updates.spec.ts` | Create activity → poll `recent-activity` / `microsites` |
+| Dashboard permissions & personas | `tests/dashboard/persona-permissions.spec.ts` | `broker-profile` role assertions + org-wide vs self scoping |
+| Admin panel | `tests/admin/admin-panel.spec.ts` | Admin login + read-only list endpoints + auth gating |
+
+Shared helpers live in `utils/buyerLinks.ts`, `utils/tracking.ts`, `utils/dashboardApi.ts`,
+`utils/adminApi.ts`, and `utils/personas.ts`.
+
+### Required `.env` for full coverage
+
+Copy `.env.example` → `.env` and fill in real **dev** accounts. Values with a baked-in
+default run without config; the rest gate specific areas:
+
+- `TEST_PHONE` — a broker whose org can access the test projects (otherwise creation
+  tests get "permission denied"). Set `POST_VISIT_PROJECT` / `EOI_PROJECT` /
+  `PHASED_PROJECT` to projects that broker can actually access.
+- `OWNER_PHONE`, `GM_PHONE`, `PRESALES_MANAGER_PHONE`, `PRESALES_REP_PHONE`,
+  `SALES_REP_PHONE`, `MARKETING_REP_PHONE` — persona/permission tests **skip** when unset.
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD` — admin-panel and alert-audit tests **skip** when unset.
+
+Tests are tagged `@sanity` (happy path) and `@regression` (negatives/edge). Timing-gated
+checks (broker alert delivery) are best-effort and log rather than hard-fail on async delay.
+
 ## Selector Strategy
 
 Use `data-testid` selectors only.  
