@@ -17,6 +17,16 @@ const PHONE = {
 
 const OTP = '123456';
 
+// Project the tier broker's org can actually access (override via env).
+const TEST_PROJECT =
+  process.env.TIER_TEST_PROJECT ?? 'Abhee Tranquila';
+const PROJECT_MARKER =
+  TEST_PROJECT.split(' ')[0];
+
+// Tier 1 = SHARED_PATH: apex host, then /{orgSlug}/{token} (slug varies by org).
+const TIER1_URL_RE =
+  /^https:\/\/dev\.propfocus\.in\/[^/]+\/.+/;
+
 async function login(
   page: Page,
   phone: string = PHONE.ACTIVE
@@ -128,15 +138,27 @@ test.describe.serial(
           MicrositeResponseBody =
             await sendMicrositeRequest(
               request,
-              `Arhan with ID ${buyerId} for Abhee Tranquila`
+              `Arhan with ID ${buyerId} for ${TEST_PROJECT}`
             );
 
+        // A `success: true` response can still carry NO link (e.g.
+        // "permission denied" / "clarification request"). Assert the link
+        // actually exists AND matches the Tier 1 URL shape right here, so the
+        // serial block fails fast with the real reason instead of passing hollow.
         expect(
-          responseBody.success
+          responseBody.success,
+          `webhook not successful: ${responseBody.message}`
+        ).toBeTruthy();
+
+        expect(
+          responseBody.micrositeUrl,
+          `no micrositeUrl returned (message: ${responseBody.message})`
         ).toBeTruthy();
 
         micrositeUrl =
           responseBody.micrositeUrl!;
+
+        expect(micrositeUrl).toMatch(TIER1_URL_RE);
 
         console.log(
           `Buyer ID: ${buyerId}`
@@ -155,9 +177,7 @@ test.describe.serial(
 
         expect(
           micrositeUrl
-        ).toMatch(
-          /^https:\/\/dev\.propfocus\.in\/propfocus-internal\/.+/
-        );
+        ).toMatch(TIER1_URL_RE);
 
         console.log(
           'Tier 1 URL format validated ✓'
@@ -192,7 +212,7 @@ test.describe.serial(
         await expect(
           page.locator('body')
         ).toContainText(
-          'Abhee'
+          PROJECT_MARKER
         );
 
       }

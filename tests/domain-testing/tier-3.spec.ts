@@ -17,6 +17,20 @@ const PHONE = {
 
 const OTP = '123456';
 
+// Project the tier broker's org can actually access (override via env).
+const TEST_PROJECT =
+  process.env.TIER_TEST_PROJECT ?? 'Abhee Tranquila';
+const PROJECT_MARKER =
+  TEST_PROJECT.split(' ')[0];
+
+// Tier 3 = CUSTOM_DOMAIN: branded host + bare token path. The custom host is
+// org-specific (override via env); the token is `{buyername}-{HASH}`.
+const TIER3_CUSTOM_HOST =
+  process.env.TIER3_CUSTOM_HOST ?? 'discover.n8npropfocus.com';
+const TIER3_URL_RE = new RegExp(
+  `^https:\\/\\/${TIER3_CUSTOM_HOST.replace(/[.]/g, '\\.')}\\/[^/]+$`
+);
+
 async function login(
   page: Page,
   phone: string = PHONE.ACTIVE
@@ -128,15 +142,27 @@ test.describe.serial(
           MicrositeResponseBody =
             await sendMicrositeRequest(
               request,
-              `Arhan with ID ${buyerId} for Abhee Tranquila`
+              `Arhan with ID ${buyerId} for ${TEST_PROJECT}`
             );
 
+        // A `success: true` response can still carry NO link (e.g.
+        // "permission denied" / "clarification request"). Assert the link
+        // actually exists AND matches the Tier 3 URL shape right here, so the
+        // serial block fails fast with the real reason instead of passing hollow.
         expect(
-          responseBody.success
+          responseBody.success,
+          `webhook not successful: ${responseBody.message}`
+        ).toBeTruthy();
+
+        expect(
+          responseBody.micrositeUrl,
+          `no micrositeUrl returned (message: ${responseBody.message})`
         ).toBeTruthy();
 
         micrositeUrl =
           responseBody.micrositeUrl!;
+
+        expect(micrositeUrl).toMatch(TIER3_URL_RE);
 
         console.log(
           `Buyer ID: ${buyerId}`
@@ -155,10 +181,7 @@ test.describe.serial(
 
         expect(
           micrositeUrl
-        ).toMatch(
-          /^https:\/\/discover\.n8npropfocus\.com\/arhan-[A-Z0-9]+$/
-
-        );
+        ).toMatch(TIER3_URL_RE);
 
         console.log(
           'Tier 3 URL format validated ✓'
@@ -193,7 +216,7 @@ test.describe.serial(
         await expect(
           page.locator('body')
         ).toContainText(
-          'Abhee'
+          PROJECT_MARKER
         );
 
       }
@@ -541,20 +564,24 @@ test(
     );
 
     const leadRow =
-  page.locator('tbody tr').filter({
-    hasText: buyerId
-  });
+      page.locator('tbody tr').filter({
+        hasText: buyerId
+      });
 
-await expect(
-  leadRow
-).toBeVisible();
+    await expect(
+      leadRow
+    ).toBeVisible();
 
-console.log(
-  await leadRow.textContent()
-);
+    // Open the engagement modal by clicking the buyer name.
+    await leadRow
+      .getByText('Arhan')
+      .click();
 
-// Pause and inspect
-await page.pause();
+    await expect(
+      page.getByText(
+        'Engagement Summary'
+      )
+    ).toBeVisible();
 
     await expect(
       page.getByText(

@@ -17,6 +17,17 @@ const PHONE = {
 
 const OTP = '123456';
 
+// Project the tier broker's org can actually access (override via env).
+const TEST_PROJECT =
+  process.env.TIER_TEST_PROJECT ?? 'Abhee Tranquila';
+const PROJECT_MARKER =
+  TEST_PROJECT.split(' ')[0];
+
+// Tier 2 = ORG_SUBDOMAIN: {orgSlug}.dev.propfocus.in/{token} (slug varies by org).
+// The subdomain label before the apex host is what distinguishes Tier 2 from Tier 1.
+const TIER2_URL_RE =
+  /^https:\/\/[a-z0-9-]+\.dev\.propfocus\.in\/.+/i;
+
 async function login(
   page: Page,
   phone: string = PHONE.ACTIVE
@@ -128,15 +139,27 @@ test.describe.serial(
           MicrositeResponseBody =
             await sendMicrositeRequest(
               request,
-              `Arhan with ID ${buyerId} for Abhee Tranquila`
+              `Arhan with ID ${buyerId} for ${TEST_PROJECT}`
             );
 
+        // A `success: true` response can still carry NO link (e.g.
+        // "permission denied" / "clarification request"). Assert the link
+        // actually exists AND matches the Tier 2 URL shape right here, so the
+        // serial block fails fast with the real reason instead of passing hollow.
         expect(
-          responseBody.success
+          responseBody.success,
+          `webhook not successful: ${responseBody.message}`
+        ).toBeTruthy();
+
+        expect(
+          responseBody.micrositeUrl,
+          `no micrositeUrl returned (message: ${responseBody.message})`
         ).toBeTruthy();
 
         micrositeUrl =
           responseBody.micrositeUrl!;
+
+        expect(micrositeUrl).toMatch(TIER2_URL_RE);
 
         console.log(
           `Buyer ID: ${buyerId}`
@@ -155,10 +178,7 @@ test.describe.serial(
 
         expect(
           micrositeUrl
-        ).toMatch(
-          /^https:\/\/propfocus-internal\.dev\.propfocus\.in\/.+/
-
-        );
+        ).toMatch(TIER2_URL_RE);
 
         console.log(
           'Tier 2 URL format validated ✓'
@@ -193,7 +213,7 @@ test.describe.serial(
         await expect(
           page.locator('body')
         ).toContainText(
-          'Abhee'
+          PROJECT_MARKER
         );
 
       }
