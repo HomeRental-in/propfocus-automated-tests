@@ -205,6 +205,10 @@ test.describe('Data Seeder', () => {
 
   // One worker, no retries — pure fire-and-forget API calls
   test.describe.configure({ mode: 'serial' });
+  // Bulk microsite seeder — creates throwaway microsites with NO assertions.
+  // OFF by default so normal runs don't pollute dev. Run intentionally with:
+  //   RUN_SEEDER=1 npx playwright test --grep SEED
+  test.skip(!process.env.RUN_SEEDER, 'Set RUN_SEEDER=1 to run the bulk microsite seeder');
   test.setTimeout(0); // unlimited — 5 000 calls take ~15-20 min
 
   test(

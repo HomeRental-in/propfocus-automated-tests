@@ -2053,7 +2053,7 @@ test(
   }
 );
 
-test.only(
+test(
   'TC_ALLLEADS_06 - Multiple buyer segment filters should use AND logic @regression',
   async ({ page }) => {
 
