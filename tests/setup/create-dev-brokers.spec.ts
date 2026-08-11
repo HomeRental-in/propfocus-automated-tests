@@ -37,10 +37,14 @@ const ROSTER: RosterEntry[] = [
   { key: 'salesManager', phone: '9900000004', name: 'Automation Sales Manager', type: 'main', orgRoleLevel: 'manager', teamFunction: 'sales' },
   { key: 'marketingManager', phone: '9900000005', name: 'Automation Marketing Manager', type: 'main', orgRoleLevel: 'manager', teamFunction: 'marketing' },
   { key: 'mainBroker', phone: '9999999999', name: 'Automation Main Broker', type: 'main', orgRoleLevel: 'manager', teamFunction: 'presales' },
-  { key: 'presalesRep', phone: '9900000011', name: 'Automation Presales Rep', type: 'sub', orgRoleLevel: 'representative', teamFunction: 'presales', parentKey: 'presalesManager' },
-  { key: 'salesRep', phone: '9900000012', name: 'Automation Sales Rep', type: 'sub', orgRoleLevel: 'representative', teamFunction: 'sales', parentKey: 'salesManager' },
-  { key: 'marketingRep', phone: '9900000013', name: 'Automation Marketing Rep', type: 'sub', orgRoleLevel: 'representative', teamFunction: 'marketing', parentKey: 'marketingManager' },
-  { key: 'subBroker', phone: '9888898888', name: 'Automation Sub Broker', type: 'sub', orgRoleLevel: 'representative', teamFunction: 'presales', parentKey: 'presalesManager' },
+  // Reps map to the GM: a general_manager manages reps in ANY division without
+  // needing broker_manager_functions rows (see utils/brokerHierarchy.js). A plain
+  // manager defaults to presales-only, which is why sales/marketing reps must not
+  // point at the function-specific managers here.
+  { key: 'presalesRep', phone: '9900000011', name: 'Automation Presales Rep', type: 'sub', orgRoleLevel: 'representative', teamFunction: 'presales', parentKey: 'gm' },
+  { key: 'salesRep', phone: '9900000012', name: 'Automation Sales Rep', type: 'sub', orgRoleLevel: 'representative', teamFunction: 'sales', parentKey: 'gm' },
+  { key: 'marketingRep', phone: '9900000013', name: 'Automation Marketing Rep', type: 'sub', orgRoleLevel: 'representative', teamFunction: 'marketing', parentKey: 'gm' },
+  { key: 'subBroker', phone: '9888898888', name: 'Automation Sub Broker', type: 'sub', orgRoleLevel: 'representative', teamFunction: 'presales', parentKey: 'gm' },
 ];
 
 const last10 = (p: string) => String(p ?? '').replace(/\D/g, '').slice(-10);
