@@ -8,7 +8,7 @@ import { Page, expect } from "@playwright/test";
 const BASE_URL = process.env.BASE_URL ?? "https://dev.propfocus.in";
 export const LOGIN_URL = process.env.DASHBOARD_LOGIN_URL ?? `${BASE_URL}/dashboard/login`;
 export const DASHBOARD_URL = process.env.DASHBOARD_URL ?? `${BASE_URL}/dashboard`;
-export const UI_PHONE = process.env.TEST_PHONE ?? "9888898888";
+export const UI_PHONE = process.env.TEST_PHONE ?? process.env.SUB_BROKER_PHONE ?? "9888898888";
 export const UI_OTP = process.env.DASHBOARD_OTP ?? "123456";
 
 export async function loginViaUI(page: Page, phone: string = UI_PHONE): Promise<void> {

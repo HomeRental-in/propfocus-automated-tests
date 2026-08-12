@@ -4,6 +4,7 @@ import {
   Page,
   APIRequestContext,
 } from '@playwright/test';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
 
 // ======================================================
 // CONSTANTS
@@ -95,7 +96,7 @@ async function getCardNumber(
       console.log(`[Level ${level}] Length=${text.length} Numbers=${JSON.stringify(numbers)}`);
 
       if (numbers.length) {
-        return Number(numbers[0].replace(/,/g, ''));
+        return Number(numbers[0]!.replace(/,/g, ''));
       }
     }
   }
@@ -103,12 +104,9 @@ async function getCardNumber(
   throw new Error(`No count found for ${labelText}`);
 }
 
-
-
-
 const PHONE = {
-  MAIN: '9999999999',
-  SUB:  '9888898888',
+  MAIN: BROKER_PHONE.MAIN_BROKER,
+  SUB:  BROKER_PHONE.SUB_BROKER,
 } as const;
 
 const OTP          = '123456';

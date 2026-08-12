@@ -1,4 +1,4 @@
-import { test } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { BROKER_PHONE } from '../../utils/brokerPhones';
 import {
   assertMicrositeAllowed,
@@ -10,6 +10,8 @@ import {
   sendBrokerWebhook,
   uniqueBuyerId,
 } from '../../utils/brokerAccessHelpers';
+import { uniqueBuyerName } from '../../utils/buyerLinks';
+import { loginBroker, findLeadOnDashboard } from '../../utils/dashboardApi';
 import {
   getDefaultTestProject,
   getSuccessTestProjects,
@@ -17,17 +19,22 @@ import {
 import { SITE_VISIT_DEFAULT_SLOT } from '../../utils/siteVisitProjects';
 
 // ======================================================
-// EXTENSIVE BROKER ACCESS
+// BROKER ACCESS
 //
-// • All success projects × MAIN / SUB / INACTIVE / SUSPENDED
-// • Microsite + site visit (SV) link_token per broker
-// • Cross-broker SV (microsite on one broker, SV on another)
-// • SV NLP + date phrases on MAIN and SUB (default project)
+// Role coverage (main / sub / inactive / suspended) — NOT the full project
+// catalog. Every success project is already asserted in
+// microsite-nlp-formats + site-visit-nlp-formats. Repeating that matrix here
+// × 4 brokers was ~1,400 webhook messages with no extra product signal.
+//
+// Extra links we DO create are checked on the dashboard (lead appears).
 // ======================================================
 
-const BUYER_NAME = 'Harsha';
 const DEFAULT_PROJECT = getDefaultTestProject().name;
-const ALL_SUCCESS_PROJECTS = getSuccessTestProjects();
+const EXTRA_PROJECT =
+  getSuccessTestProjects().find((p) => p.name === 'KNS Sampada')?.name ??
+  DEFAULT_PROJECT;
+const ROLE_PROJECTS = Array.from(new Set([DEFAULT_PROJECT, EXTRA_PROJECT]));
+const DEFAULT_ALIASES = getDefaultTestProject().aliases ?? [];
 
 const SV_PROMPT_BUILDERS: Array<{
   name: string;
@@ -106,228 +113,196 @@ const CROSS_BROKER_CASES = [
     micrositePhone: BROKER_PHONE.SUB_BROKER,
     svPhone: BROKER_PHONE.SUSPENDED,
     expectSvAllowed: false,
-    
   },
 ] as const;
 
+async function assertLeadVisible(
+  request: Parameters<typeof loginBroker>[0],
+  phone: string,
+  buyerName: string,
+  buyerId: string
+) {
+  const { token } = await loginBroker(request, phone);
+  let lead: unknown;
+  for (let attempt = 0; attempt < 5 && !lead; attempt++) {
+    lead = await findLeadOnDashboard(request, token, { buyerName, buyerId });
+    if (!lead && attempt < 4) {
+      await new Promise((r) => setTimeout(r, 2000));
+    }
+  }
+  expect(
+    lead,
+    `Dashboard did not show lead ${buyerName} / ${buyerId} for ${phone}`
+  ).toBeTruthy();
+  console.log(`Dashboard lead visible for ${phone}: ${buyerName} ${buyerId} ✓`);
+}
+
 // ======================================================
-// 1. FULL PROJECT MATRIX — every success project
+// 1. ROLE COVERAGE — default + one extra project, not the full catalog
 // ======================================================
 
-test.describe('Broker access — microsite all projects', () => {
+test.describe('Broker access — microsite by role', () => {
   test.describe.configure({ mode: 'serial' });
 
-  for (const project of ALL_SUCCESS_PROJECTS) {
-    test(
-      `BRK_MS_MAIN - ${project.name} @regression`,
+  for (const project of ROLE_PROJECTS) {
+    test(`BRK_MS_MAIN - ${project} @regression`, async ({ request }) => {
+      const buyerName = uniqueBuyerName();
+      const buyerId = uniqueBuyerId();
+      const body = await sendBrokerWebhook(
+        request,
+        `${buyerName} ${buyerId} for ${project}`,
+        BROKER_PHONE.MAIN_BROKER
+      );
+      assertMicrositeAllowed(body);
+      await assertLeadVisible(request, BROKER_PHONE.MAIN_BROKER, buyerName, buyerId);
+    });
 
-      async ({ request }) => {
-        const buyerId = uniqueBuyerId();
-        const body = await sendBrokerWebhook(
-          request,
-          `${BUYER_NAME} ${buyerId} for ${project.name}`,
-          BROKER_PHONE.MAIN_BROKER
-        );
-        assertMicrositeAllowed(body);
-      }
-    );
+    test(`BRK_MS_SUB - ${project} @regression`, async ({ request }) => {
+      const buyerName = uniqueBuyerName();
+      const buyerId = uniqueBuyerId();
+      const body = await sendBrokerWebhook(
+        request,
+        `${buyerName} ${buyerId} for ${project}`,
+        BROKER_PHONE.SUB_BROKER
+      );
+      assertMicrositeAllowed(body);
+      await assertLeadVisible(request, BROKER_PHONE.SUB_BROKER, buyerName, buyerId);
+    });
 
-    test(
-      `BRK_MS_SUB - ${project.name} @regression`,
+    test(`BRK_MS_INACTIVE - ${project} blocked @regression`, async ({ request }) => {
+      const buyerId = uniqueBuyerId();
+      const body = await sendBrokerWebhook(
+        request,
+        `Harsha ${buyerId} for ${project}`,
+        BROKER_PHONE.INACTIVE
+      );
+      assertMicrositeBlocked(body);
+    });
 
-      async ({ request }) => {
-        const buyerId = uniqueBuyerId();
-        const body = await sendBrokerWebhook(
-          request,
-          `${BUYER_NAME} ${buyerId} for ${project.name}`,
-          BROKER_PHONE.SUB_BROKER
-        );
-        assertMicrositeAllowed(body);
-      }
-    );
-
-    test(
-      `BRK_MS_INACTIVE - ${project.name} blocked @regression`,
-
-      async ({ request }) => {
-        const buyerId = uniqueBuyerId();
-        const body = await sendBrokerWebhook(
-          request,
-          `${BUYER_NAME} ${buyerId} for ${project.name}`,
-          BROKER_PHONE.INACTIVE
-        );
-        assertMicrositeBlocked(body);
-      }
-    );
-
-    test(
-      `BRK_MS_SUSPENDED - ${project.name} blocked @regression`,
-
-      async ({ request }) => {
-        
-
-        const buyerId = uniqueBuyerId();
-        const body = await sendBrokerWebhook(
-          request,
-          `${BUYER_NAME} ${buyerId} for ${project.name}`,
-          BROKER_PHONE.SUSPENDED
-        );
-        assertMicrositeBlocked(body);
-      }
-    );
+    test(`BRK_MS_SUSPENDED - ${project} blocked @regression`, async ({ request }) => {
+      const buyerId = uniqueBuyerId();
+      const body = await sendBrokerWebhook(
+        request,
+        `Harsha ${buyerId} for ${project}`,
+        BROKER_PHONE.SUSPENDED
+      );
+      assertMicrositeBlocked(body);
+    });
   }
 });
 
-test.describe('Broker access — site visit all projects', () => {
+test.describe('Broker access — site visit by role', () => {
   test.describe.configure({ mode: 'serial' });
 
-  for (const project of ALL_SUCCESS_PROJECTS) {
-    const svPrompt = (buyerId: string) =>
-      `${BUYER_NAME} ${buyerId} for sv ${project.name} ${SITE_VISIT_DEFAULT_SLOT}`;
+  for (const project of ROLE_PROJECTS) {
+    const svPrompt = (buyerName: string, buyerId: string) =>
+      `${buyerName} ${buyerId} for sv ${project} ${SITE_VISIT_DEFAULT_SLOT}`;
 
-    test(
-      `BRK_SV_MAIN - ${project.name} @regression`,
+    test(`BRK_SV_MAIN - ${project} @regression`, async ({ request }) => {
+      const buyerName = uniqueBuyerName();
+      const buyerId = uniqueBuyerId();
+      await ensureMicrositeForBroker(
+        request,
+        BROKER_PHONE.MAIN_BROKER,
+        buyerName,
+        buyerId,
+        project
+      );
+      const body = await bookSiteVisitForBroker(
+        request,
+        BROKER_PHONE.MAIN_BROKER,
+        svPrompt(buyerName, buyerId)
+      );
+      assertSiteVisitAllowed(body);
+    });
 
-      async ({ request }) => {
-        const buyerId = uniqueBuyerId();
-        await ensureMicrositeForBroker(
-          request,
-          BROKER_PHONE.MAIN_BROKER,
-          BUYER_NAME,
-          buyerId,
-          project.name
-        );
-        const body = await bookSiteVisitForBroker(
-          request,
-          BROKER_PHONE.MAIN_BROKER,
-          svPrompt(buyerId)
-        );
-        assertSiteVisitAllowed(body);
-      }
-    );
+    test(`BRK_SV_SUB - ${project} @regression`, async ({ request }) => {
+      const buyerName = uniqueBuyerName();
+      const buyerId = uniqueBuyerId();
+      await ensureMicrositeForBroker(
+        request,
+        BROKER_PHONE.SUB_BROKER,
+        buyerName,
+        buyerId,
+        project
+      );
+      const body = await bookSiteVisitForBroker(
+        request,
+        BROKER_PHONE.SUB_BROKER,
+        svPrompt(buyerName, buyerId)
+      );
+      assertSiteVisitAllowed(body);
+    });
 
-    test(
-      `BRK_SV_SUB - ${project.name} @regression`,
+    test(`BRK_SV_INACTIVE - ${project} blocked @regression`, async ({ request }) => {
+      const buyerId = uniqueBuyerId();
+      const body = await bookSiteVisitForBroker(
+        request,
+        BROKER_PHONE.INACTIVE,
+        svPrompt('Harsha', buyerId)
+      );
+      assertSiteVisitBlocked(body);
+    });
 
-      async ({ request }) => {
-        const buyerId = uniqueBuyerId();
-        await ensureMicrositeForBroker(
-          request,
-          BROKER_PHONE.SUB_BROKER,
-          BUYER_NAME,
-          buyerId,
-          project.name
-        );
-        const body = await bookSiteVisitForBroker(
-          request,
-          BROKER_PHONE.SUB_BROKER,
-          svPrompt(buyerId)
-        );
-        assertSiteVisitAllowed(body);
-      }
-    );
-
-    test(
-      `BRK_SV_INACTIVE - ${project.name} blocked @regression`,
-
-      async ({ request }) => {
-        const buyerId = uniqueBuyerId();
-        const body = await bookSiteVisitForBroker(
-          request,
-          BROKER_PHONE.INACTIVE,
-          svPrompt(buyerId)
-        );
-        assertSiteVisitBlocked(body);
-      }
-    );
-
-    test(
-      `BRK_SV_SUSPENDED - ${project.name} blocked @regression`,
-
-      async ({ request }) => {
-        
-
-        const buyerId = uniqueBuyerId();
-        const body = await bookSiteVisitForBroker(
-          request,
-          BROKER_PHONE.SUSPENDED,
-          svPrompt(buyerId)
-        );
-        assertSiteVisitBlocked(body);
-      }
-    );
+    test(`BRK_SV_SUSPENDED - ${project} blocked @regression`, async ({ request }) => {
+      const buyerId = uniqueBuyerId();
+      const body = await bookSiteVisitForBroker(
+        request,
+        BROKER_PHONE.SUSPENDED,
+        svPrompt('Harsha', buyerId)
+      );
+      assertSiteVisitBlocked(body);
+    });
   }
 });
 
 // ======================================================
-// 2. PROJECT ALIASES — MAIN & SUB brokers
+// 2. PROJECT ALIASES — default project only, MAIN & SUB
 // ======================================================
 
 test.describe('Broker access — site visit via project aliases', () => {
   test.describe.configure({ mode: 'serial' });
 
-  for (const project of ALL_SUCCESS_PROJECTS) {
-    for (const alias of project.aliases ?? []) {
-      test(
-  `BRK_SV_ALIAS_MAIN - "${alias}" → ${project.name} @regression`,
-
-  async ({ request }) => {
-    const buyerId = uniqueBuyerId();
-
-    await ensureMicrositeForBroker(
+  for (const alias of DEFAULT_ALIASES) {
+    test(`BRK_SV_ALIAS_MAIN - "${alias}" → ${DEFAULT_PROJECT} @regression`, async ({
       request,
-      BROKER_PHONE.MAIN_BROKER,
-      BUYER_NAME,
-      buyerId,
-      project.name
-    );
+    }) => {
+      const buyerName = uniqueBuyerName();
+      const buyerId = uniqueBuyerId();
+      await ensureMicrositeForBroker(
+        request,
+        BROKER_PHONE.MAIN_BROKER,
+        buyerName,
+        buyerId,
+        DEFAULT_PROJECT
+      );
+      const body = await bookSiteVisitForBroker(
+        request,
+        BROKER_PHONE.MAIN_BROKER,
+        `${buyerName} ${buyerId} for sv ${alias} ${SITE_VISIT_DEFAULT_SLOT}`
+      );
+      assertSiteVisitAllowed(body);
+    });
 
-    const body = await bookSiteVisitForBroker(
+    test(`BRK_SV_ALIAS_SUB - "${alias}" → ${DEFAULT_PROJECT} @regression`, async ({
       request,
-      BROKER_PHONE.MAIN_BROKER,
-      `${BUYER_NAME} ${buyerId} for sv ${alias} ${SITE_VISIT_DEFAULT_SLOT}`
-    );
-
-    console.log('\n========== ALIAS RESPONSE ==========');
-    console.log(`Project : ${project.name}`);
-    console.log(`Alias   : ${alias}`);
-    console.log(JSON.stringify(body, null, 2));
-    console.log('===================================\n');
-
-    assertSiteVisitAllowed(body);
-  }
-);
-
-      test(
-  `BRK_SV_ALIAS_SUB - "${alias}" → ${project.name} @regression`,
-
-  async ({ request }) => {
-    const buyerId = uniqueBuyerId();
-
-    await ensureMicrositeForBroker(
-      request,
-      BROKER_PHONE.SUB_BROKER,
-      BUYER_NAME,
-      buyerId,
-      project.name
-    );
-
-    const body = await bookSiteVisitForBroker(
-      request,
-      BROKER_PHONE.SUB_BROKER,
-      `${BUYER_NAME} ${buyerId} for sv ${alias} ${SITE_VISIT_DEFAULT_SLOT}`
-    );
-
-    console.log('\n========== ALIAS RESPONSE ==========');
-    console.log(`Project : ${project.name}`);
-    console.log(`Alias   : ${alias}`);
-    console.log(JSON.stringify(body, null, 2));
-    console.log('===================================\n');
-
-    assertSiteVisitAllowed(body);
-  }
-);
-    }
+    }) => {
+      const buyerName = uniqueBuyerName();
+      const buyerId = uniqueBuyerId();
+      await ensureMicrositeForBroker(
+        request,
+        BROKER_PHONE.SUB_BROKER,
+        buyerName,
+        buyerId,
+        DEFAULT_PROJECT
+      );
+      const body = await bookSiteVisitForBroker(
+        request,
+        BROKER_PHONE.SUB_BROKER,
+        `${buyerName} ${buyerId} for sv ${alias} ${SITE_VISIT_DEFAULT_SLOT}`
+      );
+      assertSiteVisitAllowed(body);
+    });
   }
 });
 
@@ -339,36 +314,29 @@ test.describe('Broker access — cross-broker site visit', () => {
   test.describe.configure({ mode: 'serial' });
 
   for (const testCase of CROSS_BROKER_CASES) {
-    test(
-      `BRK_X_SV - ${testCase.name} @regression`,
+    test(`BRK_X_SV - ${testCase.name} @regression`, async ({ request }) => {
+      const buyerName = uniqueBuyerName();
+      const buyerId = uniqueBuyerId();
+      await ensureMicrositeForBroker(
+        request,
+        testCase.micrositePhone,
+        buyerName,
+        buyerId,
+        DEFAULT_PROJECT
+      );
 
-      async ({ request }) => {
-        if (testCase.knownDevGap) {
-          test.fail();
-        }
+      const body = await bookSiteVisitForBroker(
+        request,
+        testCase.svPhone,
+        `${buyerName} ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
+      );
 
-        const buyerId = uniqueBuyerId();
-        await ensureMicrositeForBroker(
-          request,
-          testCase.micrositePhone,
-          BUYER_NAME,
-          buyerId,
-          DEFAULT_PROJECT
-        );
-
-        const body = await bookSiteVisitForBroker(
-          request,
-          testCase.svPhone,
-          `${BUYER_NAME} ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
-        );
-
-        if (testCase.expectSvAllowed) {
-          assertSiteVisitAllowed(body);
-        } else {
-          assertSiteVisitBlocked(body);
-        }
+      if (testCase.expectSvAllowed) {
+        assertSiteVisitAllowed(body);
+      } else {
+        assertSiteVisitBlocked(body);
       }
-    );
+    });
   }
 });
 
@@ -383,7 +351,7 @@ test.describe('Broker access — blocked brokers cannot chain microsite + SV', (
     const buyerId = uniqueBuyerId();
     const ms = await sendBrokerWebhook(
       request,
-      `${BUYER_NAME} ${buyerId} for ${DEFAULT_PROJECT}`,
+      `Harsha ${buyerId} for ${DEFAULT_PROJECT}`,
       BROKER_PHONE.INACTIVE
     );
     assertMicrositeBlocked(ms);
@@ -391,7 +359,7 @@ test.describe('Broker access — blocked brokers cannot chain microsite + SV', (
     const sv = await bookSiteVisitForBroker(
       request,
       BROKER_PHONE.INACTIVE,
-      `${BUYER_NAME} ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
+      `Harsha ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
     );
     assertSiteVisitBlocked(sv);
   });
@@ -399,12 +367,10 @@ test.describe('Broker access — blocked brokers cannot chain microsite + SV', (
   test('BRK_CHAIN_SUSPENDED - microsite should be blocked @regression', async ({
     request,
   }) => {
-    
-
     const buyerId = uniqueBuyerId();
     const ms = await sendBrokerWebhook(
       request,
-      `${BUYER_NAME} ${buyerId} for ${DEFAULT_PROJECT}`,
+      `Harsha ${buyerId} for ${DEFAULT_PROJECT}`,
       BROKER_PHONE.SUSPENDED
     );
     assertMicrositeBlocked(ms);
@@ -412,7 +378,7 @@ test.describe('Broker access — blocked brokers cannot chain microsite + SV', (
     const sv = await bookSiteVisitForBroker(
       request,
       BROKER_PHONE.SUSPENDED,
-      `${BUYER_NAME} ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
+      `Harsha ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
     );
     assertSiteVisitBlocked(sv);
   });
@@ -432,67 +398,74 @@ for (const brokerLabel of ['MAIN', 'SUB'] as const) {
     test.describe.configure({ mode: 'serial' });
 
     for (const format of SV_PROMPT_BUILDERS) {
-      test(
-        `BRK_SV_FMT_${brokerLabel} - ${format.name} @sanity`,
+      test(`BRK_SV_FMT_${brokerLabel} - ${format.name} @sanity`, async ({
+        request,
+      }) => {
+        const buyerName = uniqueBuyerName();
+        const buyerId = uniqueBuyerId();
+        await ensureMicrositeForBroker(
+          request,
+          phone,
+          buyerName,
+          buyerId,
+          DEFAULT_PROJECT
+        );
 
-        async ({ request }) => {
-          const buyerId = uniqueBuyerId();
-          await ensureMicrositeForBroker(
-            request,
-            phone,
-            BUYER_NAME,
-            buyerId,
-            DEFAULT_PROJECT
-          );
-
-          const body = await bookSiteVisitForBroker(
-            request,
-            phone,
-            format.build(BUYER_NAME, buyerId, DEFAULT_PROJECT)
-          );
-          assertSiteVisitAllowed(body);
-        }
-      );
+        const body = await bookSiteVisitForBroker(
+          request,
+          phone,
+          format.build(buyerName, buyerId, DEFAULT_PROJECT)
+        );
+        assertSiteVisitAllowed(body);
+      });
     }
   });
 }
 
 // ======================================================
-// 6. SANITY SPOT — default project quick check all brokers
+// 6. SANITY — default project + dashboard output
 // ======================================================
 
 test.describe('Broker access — sanity spot check', () => {
-  test('BRK_SANITY_MAIN microsite + SV @sanity', async ({ request }) => {
+  test('BRK_SANITY_MAIN microsite + SV + dashboard lead @sanity', async ({
+    request,
+  }) => {
+    const buyerName = uniqueBuyerName();
     const buyerId = uniqueBuyerId();
     await ensureMicrositeForBroker(
       request,
       BROKER_PHONE.MAIN_BROKER,
-      BUYER_NAME,
+      buyerName,
       buyerId,
       DEFAULT_PROJECT
     );
     const body = await bookSiteVisitForBroker(
       request,
       BROKER_PHONE.MAIN_BROKER,
-      `${BUYER_NAME} ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
+      `${buyerName} ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
     );
     assertSiteVisitAllowed(body);
+    await assertLeadVisible(request, BROKER_PHONE.MAIN_BROKER, buyerName, buyerId);
   });
 
-  test('BRK_SANITY_SUB microsite + SV @sanity', async ({ request }) => {
+  test('BRK_SANITY_SUB microsite + SV + dashboard lead @sanity', async ({
+    request,
+  }) => {
+    const buyerName = uniqueBuyerName();
     const buyerId = uniqueBuyerId();
     await ensureMicrositeForBroker(
       request,
       BROKER_PHONE.SUB_BROKER,
-      BUYER_NAME,
+      buyerName,
       buyerId,
       DEFAULT_PROJECT
     );
     const body = await bookSiteVisitForBroker(
       request,
       BROKER_PHONE.SUB_BROKER,
-      `${BUYER_NAME} ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
+      `${buyerName} ${buyerId} for sv ${DEFAULT_PROJECT} ${SITE_VISIT_DEFAULT_SLOT}`
     );
     assertSiteVisitAllowed(body);
+    await assertLeadVisible(request, BROKER_PHONE.SUB_BROKER, buyerName, buyerId);
   });
 });

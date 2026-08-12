@@ -5,7 +5,9 @@ import {
 } from '@playwright/test';
 
 
-const SUB_BROKER_PHONE = '9888898888';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
+
+const SUB_BROKER_PHONE = BROKER_PHONE.SUB_BROKER;
 const OTP = '123456';
 // Mock IDs for leads that belong to a Main Broker and another Sub Broker
 

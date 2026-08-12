@@ -3,12 +3,20 @@ import {
   expect,
   Page
 } from '@playwright/test';
-
 import { APIRequestContext } from '@playwright/test';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
+
 const PROJECT_NAME = 'Abhee Tranquila';
 const BUYER_NAME = 'Arhan';
-const WHATSAPP_WEBHOOK_URL_LOCAL =
-  'https://dev.propfocus.in/api/whatsapp-webhook';
+const MAIN_BROKER_PHONE = BROKER_PHONE.MAIN_BROKER;
+const SUB_BROKER_PHONE = BROKER_PHONE.SUB_BROKER;
+const OTP = '123456';
+let buyerId = '';
+const testLead = {
+    name: 'Arhan',
+  phone: SUB_BROKER_PHONE
+};
+
 async function sendWebhookRequest(
   request: APIRequestContext,
   messageBody: string
@@ -16,7 +24,7 @@ async function sendWebhookRequest(
   const response = await request.post(
     'https://dev.propfocus.in/api/whatsapp-webhook',
     {
-      timeout: 60000, // <-- add this
+      timeout: 60000,
       data: {
         event: 'message',
         data: {
@@ -32,17 +40,6 @@ async function sendWebhookRequest(
   return await response.json();
 }
 
-
-
-
-const MAIN_BROKER_PHONE = '9999999999';
-const SUB_BROKER_PHONE = '9888898888';
-const OTP = '123456';
-let buyerId = '';
-const testLead = {
-    name: 'Arhan',
-  phone: SUB_BROKER_PHONE
-};
 async function login(
   page: Page,
   phone: string

@@ -4,6 +4,7 @@ import {
   Page,
   APIRequestContext,
 } from '@playwright/test';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
 
 test.setTimeout(120000);
 
@@ -14,7 +15,7 @@ const BUYER_NAME = 'Arhan';
 const PROJECT_NAME = 'Abhee Tranquila';
 const LOGIN_URL = 'https://dev.propfocus.in/dashboard/login';
 const PHONE = {
-  MAIN: '9999999999',
+  MAIN: BROKER_PHONE.MAIN_BROKER,
 } as const;
 
 async function sendWebhookRequest(request: APIRequestContext, messageBody: string) {

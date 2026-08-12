@@ -26,6 +26,7 @@ import {
   Page,
   APIRequestContext,
 } from '@playwright/test';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
 test.setTimeout(
   600000
 );
@@ -37,8 +38,8 @@ const PROJECT_NAME = 'Abhee Tranquila';
 const LOGIN_URL =
   'https://dev.propfocus.in/dashboard/login';
 const PHONE = {
-  MAIN: '9999999999',
-  SUB: '9888898888',
+  MAIN: BROKER_PHONE.MAIN_BROKER,
+  SUB: BROKER_PHONE.SUB_BROKER,
 } as const;
 async function sendMicrositeRequest(
   request: APIRequestContext,
@@ -52,7 +53,7 @@ async function sendMicrositeRequest(
         data: {
           event: 'message',
           data: {
-            from: '9999999999',
+            from: PHONE.MAIN,
             body: messageBody
           }
         }
