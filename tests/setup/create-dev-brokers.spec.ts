@@ -20,8 +20,6 @@ import { adminLogin, adminCredsConfigured } from '../../utils/adminApi';
 import { provisionAutomationBrokers } from '../../utils/provisionBrokers';
 
 test.describe('Dev broker setup', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test('@setup - provision automation broker roster', async ({ request }) => {
     test.skip(
       !adminCredsConfigured(),

@@ -1,12 +1,12 @@
-import { test, expect, Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
 import { loginViaUI, DASHBOARD_URL, pageHasNoHorizontalOverflow } from "../../utils/uiLogin";
 
 /**
  * Responsiveness sweep across every dashboard page at mobile / tablet / desktop.
  *
  * The core assertion is "no horizontal scroll" — the failure mode users reported
- * (content pushed off-screen sideways). One shared, logged-in page is reused
- * (serial mode) and simply resized + re-navigated per case to keep the sweep fast.
+ * (content pushed off-screen sideways). Each case logs in on its own page so
+ * failures don't skip the rest of the matrix.
  *
  * Feature-gated tabs (eoi/post-visit) may render an empty or gated state; that is
  * fine — an empty state must still not overflow, which is exactly what we assert.
@@ -31,25 +31,13 @@ const VIEWPORTS = [
   { name: "desktop", width: 1280, height: 800 },
 ] as const;
 
-test.describe.configure({ mode: "serial" });
-
 test.describe("Responsiveness — all dashboard pages", () => {
-  let page: Page;
-
-  test.beforeAll(async ({ browser }) => {
-    page = await browser.newPage();
-    await loginViaUI(page);
-  });
-
-  test.afterAll(async () => {
-    await page.close();
-  });
-
   for (const vp of VIEWPORTS) {
     for (const tab of TABS) {
       const sanity = vp.name === "mobile" && (tab === "overview" || tab === "leads");
-      test(`TC_RESP_${vp.name}_${tab} - no horizontal overflow ${sanity ? "@sanity" : "@regression"}`, async () => {
+      test(`TC_RESP_${vp.name}_${tab} - no horizontal overflow ${sanity ? "@sanity" : "@regression"}`, async ({ page }) => {
         await page.setViewportSize({ width: vp.width, height: vp.height });
+        await loginViaUI(page);
         const url = tab === "overview" ? DASHBOARD_URL : `${DASHBOARD_URL}?tab=${tab}`;
         await page.goto(url, { waitUntil: "domcontentloaded" });
         await page.waitForLoadState("networkidle").catch(() => {});

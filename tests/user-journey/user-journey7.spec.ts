@@ -89,7 +89,6 @@ async function login(
 
 test.describe('Sub Broker Role-Based Access Restrictions (RBAC)', () => {
   // Use serial mode so that tests can reuse context easily if needed, matching UJ6 structure
-  test.describe.configure({ mode: 'serial' });
   test.setTimeout(120000);
 
   test('UJ7_STEP_01 - Sub Broker Logs Into Dashboard', async ({ page }) => {

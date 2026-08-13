@@ -127,7 +127,7 @@ async function sendMicrositeRequest(
 let buyerId = '';
 let micrositeUrl = '';
 
-test.describe.serial(
+test.describe(
   'Tier 3 Routing',
   () => {
 

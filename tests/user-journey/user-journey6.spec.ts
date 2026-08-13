@@ -118,9 +118,6 @@ async function login(
 let micrositeUrl = '';
 
 test.describe('Sub Broker / Main Broker Lead Visibility Journey', () => {
-    test.describe.configure({
-    mode: 'serial'
-  });
   test.setTimeout(120000);
 
   test(

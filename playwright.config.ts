@@ -7,7 +7,9 @@ const defaultTimeoutMs = Number(process.env.DEFAULT_TIMEOUT_MS ?? 30_000);
 
 export default defineConfig({
   testDir: "./tests",
-  fullyParallel: true,
+  // false = tests in a file run in order, but a failure does NOT skip the rest
+  // (unlike mode:'serial'). Files still run in parallel across workers.
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 2 : undefined,

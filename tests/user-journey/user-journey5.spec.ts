@@ -46,8 +46,6 @@ async function login(page: Page, phone: string = PHONE.MAIN) {
   await page.waitForURL(/dashboard/, { timeout: 30000 });
 }
 
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async ({ request }) => {
   buyerId = `UJ5${Date.now().toString().slice(-6)}`;
 

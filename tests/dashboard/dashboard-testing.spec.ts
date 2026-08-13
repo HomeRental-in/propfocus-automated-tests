@@ -21,13 +21,6 @@ const PHONE = {
 
 const OTP = '123456';                                            // fixed dev OTP
 
-/// ======================================================
-// SERIAL MODE
-// All dashboard tests share one logged-in session
-// ======================================================
- 
-test.describe.configure({ mode: 'serial' });
- 
 // ======================================================
 // NAV HELPER
 // Sidebar items are not <a> tags — use locator by text

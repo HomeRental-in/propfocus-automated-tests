@@ -39,10 +39,6 @@ import { BROKER_PHONE } from '../../utils/brokerPhones';
 
 test.setTimeout(180000);
 
-test.describe.configure({
-  mode: 'serial',
-});
-
 const LOGIN_URL =
   'https://dev.propfocus.in/dashboard/login';
 

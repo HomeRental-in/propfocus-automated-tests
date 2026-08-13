@@ -181,7 +181,7 @@ async function createMicrosite(
 // TEST SUITE
 // ======================================================
 
-test.describe.serial('Microsite Status Alerts', () => {
+test.describe('Microsite Status Alerts', () => {
 
   test.setTimeout(300000);
 

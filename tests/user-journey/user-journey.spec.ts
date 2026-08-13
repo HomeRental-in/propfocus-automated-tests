@@ -44,12 +44,6 @@ const BUYER_NAME = 'Harsha';
 const PROJECT    = 'Abhee Tranquila';
 
 // ======================================================
-// SERIAL — all steps run in order, shared state
-// ======================================================
-
-test.describe.configure({ mode: 'serial' });
-
-// ======================================================
 // SHARED STATE
 // Populated in early steps, used in later steps
 // ======================================================

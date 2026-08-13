@@ -202,7 +202,6 @@ async function getStatCount(page: Page, label: string): Promise<number> {
 test.describe('Data Seeder', () => {
 
   // One worker, no retries — pure fire-and-forget API calls
-  test.describe.configure({ mode: 'serial' });
   // Bulk microsite seeder — creates throwaway microsites with NO assertions.
   // OFF by default so normal runs don't pollute dev. Run intentionally with:
   //   RUN_SEEDER=1 npx playwright test --grep SEED

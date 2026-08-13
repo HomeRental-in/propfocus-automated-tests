@@ -34,8 +34,6 @@ const BUYER_NAME = 'Harsha';
 // ======================================================
 
 test.describe('Special projects — boss microsites', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getBossTestProjects()) {
     test(
       `SPEC_BOSS_MS - ${project.name} @sanity`,
@@ -55,8 +53,6 @@ test.describe('Special projects — boss microsites', () => {
 // ======================================================
 
 test.describe('Special projects — boss site visits', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getBossTestProjects()) {
     test(
       `SPEC_BOSS_SV - ${project.name} @regression`,
@@ -84,8 +80,6 @@ test.describe('Special projects — boss site visits', () => {
 // ======================================================
 
 test.describe('Special projects — inactive microsites', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getInactiveTestProjects()) {
     test(
       `SPEC_INACTIVE_MS - ${project.name} @regression`,
@@ -124,8 +118,6 @@ test.describe('Special projects — inactive microsites', () => {
 // ======================================================
 
 test.describe('Special projects — inactive site visits', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getInactiveTestProjects()) {
     test(
       `SPEC_INACTIVE_SV - ${project.name} @regression`,
@@ -166,8 +158,6 @@ test.describe('Special projects — inactive site visits', () => {
 // ======================================================
 
 test.describe('Special projects — phased microsites', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getPhasedSuccessTestProjects()) {
     test(
       `SPEC_PHASED_MS - ${project.name} @sanity`,
@@ -183,8 +173,6 @@ test.describe('Special projects — phased microsites', () => {
 });
 
 test.describe('Special projects — phased site visits', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getPhasedSuccessTestProjects()) {
     test(
       `SPEC_PHASED_SV - ${project.name} @sanity`,
@@ -209,8 +197,6 @@ test.describe('Special projects — phased site visits', () => {
 // ======================================================
 
 test.describe('Special projects — phased alias microsites', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const testCase of getPhasedAliasTestCases()) {
     test(
       `SPEC_PHASED_ALIAS_MS - "${testCase.alias}" → ${testCase.resolvesTo} @regression`,
@@ -226,8 +212,6 @@ test.describe('Special projects — phased alias microsites', () => {
 });
 
 test.describe('Special projects — phased alias site visits', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const testCase of getPhasedAliasTestCases()) {
     test(
       `SPEC_PHASED_ALIAS_SV - "${testCase.alias}" → ${testCase.resolvesTo} @regression`,
@@ -252,8 +236,6 @@ test.describe('Special projects — phased alias site visits', () => {
 // ======================================================
 
 test.describe('Special projects — permission denied microsites', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getPermissionDeniedTestProjects()) {
     test(
       `SPEC_PERM_MS - ${project.name} @regression`,
@@ -269,8 +251,6 @@ test.describe('Special projects — permission denied microsites', () => {
 });
 
 test.describe('Special projects — permission denied site visits', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getPermissionDeniedTestProjects()) {
     test(
       `SPEC_PERM_SV - ${project.name} @regression`,
@@ -302,8 +282,6 @@ test.describe('Special projects — permission denied site visits', () => {
 // ======================================================
 
 test.describe('Special projects — ambiguous phased microsites', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getAmbiguousTestProjects()) {
     test(
       `SPEC_AMBIG_MS - ${project.name} @regression`,
@@ -319,8 +297,6 @@ test.describe('Special projects — ambiguous phased microsites', () => {
 });
 
 test.describe('Special projects — ambiguous phased site visits', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getAmbiguousTestProjects()) {
     test(
       `SPEC_AMBIG_SV - ${project.name} @regression`,

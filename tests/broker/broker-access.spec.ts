@@ -142,8 +142,6 @@ async function assertLeadVisible(
 // ======================================================
 
 test.describe('Broker access — microsite by role', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of ROLE_PROJECTS) {
     test(`BRK_MS_MAIN - ${project} @regression`, async ({ request }) => {
       const buyerName = uniqueBuyerName();
@@ -192,8 +190,6 @@ test.describe('Broker access — microsite by role', () => {
 });
 
 test.describe('Broker access — site visit by role', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of ROLE_PROJECTS) {
     const svPrompt = (buyerName: string, buyerId: string) =>
       `${buyerName} ${buyerId} for sv ${project} ${SITE_VISIT_DEFAULT_SLOT}`;
@@ -261,8 +257,6 @@ test.describe('Broker access — site visit by role', () => {
 // ======================================================
 
 test.describe('Broker access — site visit via project aliases', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const alias of DEFAULT_ALIASES) {
     test(`BRK_SV_ALIAS_MAIN - "${alias}" → ${DEFAULT_PROJECT} @regression`, async ({
       request,
@@ -311,8 +305,6 @@ test.describe('Broker access — site visit via project aliases', () => {
 // ======================================================
 
 test.describe('Broker access — cross-broker site visit', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const testCase of CROSS_BROKER_CASES) {
     test(`BRK_X_SV - ${testCase.name} @regression`, async ({ request }) => {
       const buyerName = uniqueBuyerName();
@@ -345,8 +337,6 @@ test.describe('Broker access — cross-broker site visit', () => {
 // ======================================================
 
 test.describe('Broker access — blocked brokers cannot chain microsite + SV', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test('BRK_CHAIN_INACTIVE - microsite blocked @regression', async ({ request }) => {
     const buyerId = uniqueBuyerId();
     const ms = await sendBrokerWebhook(
@@ -395,8 +385,6 @@ for (const brokerLabel of ['MAIN', 'SUB'] as const) {
       : BROKER_PHONE.SUB_BROKER;
 
   test.describe(`Broker access — SV formats (${brokerLabel} broker)`, () => {
-    test.describe.configure({ mode: 'serial' });
-
     for (const format of SV_PROMPT_BUILDERS) {
       test(`BRK_SV_FMT_${brokerLabel} - ${format.name} @sanity`, async ({
         request,

@@ -67,9 +67,6 @@ async function sendMicrositeRequest(
   return await response.json();
 
 }
-test.describe.configure({
-  mode: 'serial',
-});
 async function login(
   page: Page,
   phone: string = PHONE.MAIN
