@@ -109,6 +109,18 @@ export async function adminPatch(
   return { status: res.status(), body: await res.json().catch(() => ({})) };
 }
 
+export async function adminDelete(
+  request: APIRequestContext,
+  token: string,
+  path: string
+): Promise<{ status: number; body: any }> {
+  const res = await request.delete(`${API_BASE}${path}`, {
+    headers: authHeaders(token),
+    timeout: 45000,
+  });
+  return { status: res.status(), body: await res.json().catch(() => ({})) };
+}
+
 export async function adminVerify(request: APIRequestContext, token: string) {
   const { status, body } = await adminGet(request, token, '/admin/auth/verify');
   expect(status).toBe(200);
