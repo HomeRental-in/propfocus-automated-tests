@@ -1,6 +1,7 @@
 //dashboard bugs
 
 import { test, expect, Page, APIRequestContext } from '@playwright/test';
+import { BROKER_PHONE } from '../utils/brokerPhones';
 
 // ======================================================
 // CONSTANTS
@@ -9,7 +10,7 @@ import { test, expect, Page, APIRequestContext } from '@playwright/test';
 const LOGIN_URL  = 'https://dev.propfocus.in/dashboard/login';
 
 const PHONE = {
-  MAIN: '9999999999',
+  MAIN: BROKER_PHONE.MAIN_BROKER,
 } as const;
 
 const OTP = '123456';
@@ -2053,7 +2054,7 @@ test(
   }
 );
 
-test.only(
+test(
   'TC_ALLLEADS_06 - Multiple buyer segment filters should use AND logic @regression',
   async ({ page }) => {
 

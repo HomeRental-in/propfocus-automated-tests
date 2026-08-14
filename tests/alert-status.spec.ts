@@ -1,5 +1,6 @@
 import { test, expect, APIRequestContext, Page } from '@playwright/test';
 import { chromium } from '@playwright/test';
+import { BROKER_PHONE } from '../utils/brokerPhones';
 
 const SESSION_DIR = './whatsapp-session';
 
@@ -123,7 +124,7 @@ await context.close();
 return response || '';
 }
 const BASE_URL = 'https://dev.propfocus.in';
-const SUB_BROKER_PHONE = '9999999999';
+const SUB_BROKER_PHONE = BROKER_PHONE.MAIN_BROKER;
 
 const BUYER_NAME = 'Arhan';
 const PROJECT_NAME = 'Abhee Tranquila';
@@ -180,7 +181,7 @@ async function createMicrosite(
 // TEST SUITE
 // ======================================================
 
-test.describe.serial('Microsite Status Alerts', () => {
+test.describe('Microsite Status Alerts', () => {
 
   test.setTimeout(300000);
 

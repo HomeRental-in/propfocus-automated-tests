@@ -36,8 +36,6 @@ const DEFAULT_PROJECT = getDefaultTestProject().name;
 // ======================================================
 
 test.describe('Microsite flags — API generation', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const flag of MICROSITE_FLAGS) {
     test(
       `FLAG_API_${flag.id.toUpperCase()} - ${flag.keyword} @sanity`,
@@ -62,8 +60,6 @@ test.describe('Microsite flags — API generation', () => {
 // ======================================================
 
 test.describe('Microsite flags — case sensitivity', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const flag of MICROSITE_FLAGS) {
     test(
       `FLAG_CASE_${flag.id.toUpperCase()} - variants @regression`,
@@ -92,8 +88,6 @@ test.describe('Microsite flags — case sensitivity', () => {
 // ======================================================
 
 test.describe('Microsite flags — alias keyword parity', () => {
-  test.describe.configure({ mode: 'serial' });
-
   const aliasPairs: Array<{
     name: string;
     keywords: [string, string];
@@ -133,8 +127,6 @@ test.describe('Microsite flags — alias keyword parity', () => {
 // ======================================================
 
 test.describe('Microsite flags — boss and phased projects', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const flag of MICROSITE_FLAGS) {
     for (const project of FLAG_BOSS_PHASED_PROJECTS) {
       test(
@@ -161,8 +153,6 @@ test.describe('Microsite flags — boss and phased projects', () => {
 // ======================================================
 
 test.describe('Microsite flags — ambiguous multi-flag prompts', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const testCase of FLAG_AMBIGUITY_CASES) {
     test(
       `FLAG_AMBIG - ${testCase.name} @regression`,
@@ -182,8 +172,6 @@ test.describe('Microsite flags — ambiguous multi-flag prompts', () => {
 // ======================================================
 
 test.describe('Microsite flags — invalid keyword typos', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test('FLAG_TYPO_REFERRAL - misspellings @regression', async ({ request }) => {
     const typos = ['referal', 'refferal', 'refrral', 'referel'];
 
@@ -214,8 +202,6 @@ test.describe('Microsite flags — invalid keyword typos', () => {
 // ======================================================
 
 test.describe('Microsite flags — parser edge cases', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test('FLAG_EDGE_SPACES - extra whitespace @regression', async ({ request }) => {
     const prompts = [
       `FlagSpace with ID ${uniqueBuyerId()} for  Abhee     Tranquila referral`,
@@ -304,8 +290,6 @@ test.describe('Microsite flags — parser edge cases', () => {
 // ======================================================
 
 test.describe('Microsite flags — RNR behavior', () => {
-  test.describe.configure({ mode: 'serial' });
-
   test('FLAG_RNR_REFERRAL_SINGLE - RNR wins on single project @regression', async ({
     request,
   }) => {
@@ -377,8 +361,6 @@ test.describe('Microsite flags — RNR behavior', () => {
 // ======================================================
 
 test.describe('Microsite flags — old and data tag placement', () => {
-  test.describe.configure({ mode: 'serial' });
-
   const placements = [
     {
       name: 'suffix old',
@@ -420,7 +402,7 @@ test.describe('Microsite flags — old and data tag placement', () => {
 // 10. DASHBOARD — generate + verify lead type filters
 // ======================================================
 
-test.describe.serial('Microsite flags — dashboard lead types', () => {
+test.describe('Microsite flags — dashboard lead types', () => {
   const flagsWithDashboardFilter = MICROSITE_FLAGS.filter(
     (f) => f.dashboardLeadType
   );
@@ -456,7 +438,7 @@ test.describe.serial('Microsite flags — dashboard lead types', () => {
 // 11. DASHBOARD — old / data leads appear in All Leads
 // ======================================================
 
-test.describe.serial('Microsite flags — dashboard old and data leads', () => {
+test.describe('Microsite flags — dashboard old and data leads', () => {
   const flagsWithoutFilter = MICROSITE_FLAGS.filter(
     (f) => !f.dashboardLeadType
   );

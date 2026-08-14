@@ -4,6 +4,7 @@ import {
   Page,
   APIRequestContext,
 } from '@playwright/test';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
 test.setTimeout(120000);
 // ======================================================
 // USER JOURNEY 1
@@ -34,19 +35,13 @@ const API_URL    = 'https://dev.propfocus.in/api/whatsapp-webhook';
 const TRACKING_API = '/api/track-event';
 
 const PHONE = {
-  MAIN: '9999999999',
-  SUB:  '9888898888',
+  MAIN: BROKER_PHONE.MAIN_BROKER,
+  SUB:  BROKER_PHONE.SUB_BROKER,
 } as const;
 
 const OTP        = '123456';
 const BUYER_NAME = 'Harsha';
 const PROJECT    = 'Abhee Tranquila';
-
-// ======================================================
-// SERIAL — all steps run in order, shared state
-// ======================================================
-
-test.describe.configure({ mode: 'serial' });
 
 // ======================================================
 // SHARED STATE

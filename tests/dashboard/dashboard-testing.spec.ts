@@ -4,6 +4,7 @@ import {
   Page,
   BrowserContext,
 } from '@playwright/test';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
 
 // ======================================================
 // CONSTANTS
@@ -14,19 +15,12 @@ const LOGIN_URL      = 'https://dev.propfocus.in/dashboard/login';
 const API_URL        = 'https://dev.propfocus.in/api/whatsapp-webhook';
 
 const PHONE = {
-  MAIN:   '9999999999',                                          // main broker
-  SUB:    '9888898888',                                          // sub broker
+  MAIN: BROKER_PHONE.MAIN_BROKER,
+  SUB:  BROKER_PHONE.SUB_BROKER,
 } as const;
 
 const OTP = '123456';                                            // fixed dev OTP
 
-/// ======================================================
-// SERIAL MODE
-// All dashboard tests share one logged-in session
-// ======================================================
- 
-test.describe.configure({ mode: 'serial' });
- 
 // ======================================================
 // NAV HELPER
 // Sidebar items are not <a> tags — use locator by text

@@ -8,6 +8,7 @@
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "smoke": "playwright test --grep @smoke",
+    "setup:brokers": "playwright test --grep @setup",
     "test:report": "playwright show-report"
   },
   "devDependencies": {

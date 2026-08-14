@@ -621,8 +621,6 @@ test(
 // ======================================================
 
 test.describe('Microsite NLP — configured projects', () => {
-  test.describe.configure({ mode: 'serial' });
-
   const automationProjects = getAutomationTestProjects();
 
   for (const project of automationProjects) {
@@ -753,8 +751,6 @@ test.describe('Microsite NLP — unresolvable project spellings', () => {
 // ======================================================
 
 test.describe('Microsite NLP — ambiguous project (failed case)', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getAmbiguousTestProjects()) {
     test(
       `NLP_AMBIG - ${project.name} returns clarification, no link @regression`,
@@ -790,8 +786,6 @@ test.describe('Microsite NLP — ambiguous project (failed case)', () => {
 // ======================================================
 
 test.describe('Microsite NLP — permission denied (failed case)', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getPermissionDeniedTestProjects()) {
     test(
       `NLP_PERM - ${project.name} returns permission denied, no link @regression`,

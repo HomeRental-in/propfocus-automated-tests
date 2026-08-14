@@ -42,11 +42,26 @@ Production-grade Playwright + TypeScript E2E automation framework for validating
    cp .env.example .env
    ```
 
-4. Update `.env` values for your PropFocus environment.
+4. Update `.env` values for your PropFocus environment. At minimum set
+   `ADMIN_EMAIL` and `ADMIN_PASSWORD` so the suite can **create the dashboard
+   brokers it logs in as** (they are not guaranteed to exist on a fresh/reset
+   dev DB).
+
+5. Provision brokers (also runs automatically before `npm test`):
+
+   ```bash
+   npm run setup:brokers
+   ```
+
+   This creates (or reuses) **Automation Test Org** plus owner / GM / managers /
+   reps / main / sub / inactive, and a separate suspended org. It prints the
+   `.env` phone block. Organization owners cannot be created via
+   `POST /admin/brokers` — they come from the org's `contact_phone`.
 
 ## Available Scripts
 
-- `npm test` - run full test suite
+- `npm test` - run full test suite (provisions brokers first when admin creds are set)
+- `npm run setup:brokers` - create/reuse the dashboard broker roster on dev
 - `npm run test:headed` - run with headed browser
 - `npm run test:ui` - open Playwright UI runner
 - `npm run smoke` - run smoke-tagged tests only
@@ -99,8 +114,15 @@ default run without config; the rest gate specific areas:
   tests get "permission denied"). Set `POST_VISIT_PROJECT` / `EOI_PROJECT` /
   `PHASED_PROJECT` to projects that broker can actually access.
 - `OWNER_PHONE`, `GM_PHONE`, `PRESALES_MANAGER_PHONE`, `PRESALES_REP_PHONE`,
-  `SALES_REP_PHONE`, `MARKETING_REP_PHONE` — persona/permission tests **skip** when unset.
-- `ADMIN_EMAIL`, `ADMIN_PASSWORD` — admin-panel and alert-audit tests **skip** when unset.
+  `SALES_REP_PHONE`, `MARKETING_REP_PHONE` — persona/permission tests. Defaults
+  match the automation roster from `npm run setup:brokers`.
+- `ADMIN_EMAIL`, `ADMIN_PASSWORD` — required to provision brokers and to run
+  admin-panel / alert-audit tests. Without them, dashboard logins fail with
+  "This phone number is not registered".
+- After setup, grant **Automation Test Org** access to the projects you generate
+  links for (Admin → Projects → Organization Access) if those projects are not
+  `accessible_to_all`. Broker creation cannot patch that from the API without
+  re-validating the full project JSON.
 
 Tests are tagged `@sanity` (happy path) and `@regression` (negatives/edge). Timing-gated
 checks (broker alert delivery) are best-effort and log rather than hard-fail on async delay.

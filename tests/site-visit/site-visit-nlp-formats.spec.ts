@@ -496,8 +496,6 @@ test(
 // ======================================================
 
 test.describe('Site visit NLP — configured projects', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getSuccessTestProjects()) {
     test(
       `SV_PROJ - Site visit for ${project.name} @sanity`,
@@ -539,8 +537,6 @@ test.describe('Site visit NLP — configured projects', () => {
 // ======================================================
 
 test.describe('Site visit NLP — project spelling mistakes', () => {
-  test.describe.configure({ mode: 'serial' });
-
   const spellingCases = getSpellingCasesForConfiguredProjects();
 
   for (const spellingCase of spellingCases) {
@@ -596,8 +592,6 @@ test.describe('Site visit NLP — unresolvable project spellings', () => {
 // ======================================================
 
 test.describe('Site visit NLP — ambiguous project (failed case)', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getAmbiguousTestProjects()) {
     test(
       `SV_AMBIG - ${project.name} returns clarification, no site visit link @regression`,
@@ -629,8 +623,6 @@ test.describe('Site visit NLP — ambiguous project (failed case)', () => {
 });
 
 test.describe('Site visit NLP — permission denied (failed case)', () => {
-  test.describe.configure({ mode: 'serial' });
-
   for (const project of getPermissionDeniedTestProjects()) {
     test(
       `SV_PERM - ${project.name} returns permission denied, no site visit link @regression`,

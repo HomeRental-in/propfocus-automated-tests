@@ -4,6 +4,7 @@ import {
   Page,
   APIRequestContext,
 } from '@playwright/test';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
 
 // ======================================================
 // CONSTANTS
@@ -95,7 +96,7 @@ async function getCardNumber(
       console.log(`[Level ${level}] Length=${text.length} Numbers=${JSON.stringify(numbers)}`);
 
       if (numbers.length) {
-        return Number(numbers[0].replace(/,/g, ''));
+        return Number(numbers[0]!.replace(/,/g, ''));
       }
     }
   }
@@ -103,12 +104,9 @@ async function getCardNumber(
   throw new Error(`No count found for ${labelText}`);
 }
 
-
-
-
 const PHONE = {
-  MAIN: '9999999999',
-  SUB:  '9888898888',
+  MAIN: BROKER_PHONE.MAIN_BROKER,
+  SUB:  BROKER_PHONE.SUB_BROKER,
 } as const;
 
 const OTP          = '123456';
@@ -204,7 +202,10 @@ async function getStatCount(page: Page, label: string): Promise<number> {
 test.describe('Data Seeder', () => {
 
   // One worker, no retries — pure fire-and-forget API calls
-  test.describe.configure({ mode: 'serial' });
+  // Bulk microsite seeder — creates throwaway microsites with NO assertions.
+  // OFF by default so normal runs don't pollute dev. Run intentionally with:
+  //   RUN_SEEDER=1 npx playwright test --grep SEED
+  test.skip(!process.env.RUN_SEEDER, 'Set RUN_SEEDER=1 to run the bulk microsite seeder');
   test.setTimeout(0); // unlimited — 5 000 calls take ~15-20 min
 
   test(

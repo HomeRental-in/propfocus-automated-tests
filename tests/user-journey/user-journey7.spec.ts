@@ -5,7 +5,9 @@ import {
 } from '@playwright/test';
 
 
-const SUB_BROKER_PHONE = '9888898888';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
+
+const SUB_BROKER_PHONE = BROKER_PHONE.SUB_BROKER;
 const OTP = '123456';
 // Mock IDs for leads that belong to a Main Broker and another Sub Broker
 
@@ -87,7 +89,6 @@ async function login(
 
 test.describe('Sub Broker Role-Based Access Restrictions (RBAC)', () => {
   // Use serial mode so that tests can reuse context easily if needed, matching UJ6 structure
-  test.describe.configure({ mode: 'serial' });
   test.setTimeout(120000);
 
   test('UJ7_STEP_01 - Sub Broker Logs Into Dashboard', async ({ page }) => {

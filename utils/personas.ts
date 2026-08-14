@@ -2,12 +2,14 @@
  * Dashboard personas for permission / scoping tests.
  *
  * Each persona is a real dev broker account, identified by phone (login is
- * phone+OTP). Fill the phone numbers in .env. A persona whose phone is not set
- * is skipped at runtime (test.skip) so the suite stays green until configured.
+ * phone+OTP). Phones default to the automation roster (utils/testRoster.ts)
+ * which `npm run setup:brokers` creates. Override via .env when needed.
  *
  * `expect` encodes what /dashboard/broker-profile should report for that account,
  * and `orgWide` whether it should see the whole org's data.
  */
+
+import { ROSTER } from './testRoster';
 
 export type OrgRoleLevel =
   | 'organization_owner'
@@ -42,21 +44,21 @@ export const PERSONAS: Persona[] = [
     key: 'owner',
     label: 'Organization Owner',
     phoneEnv: 'OWNER_PHONE',
-    phone: env('OWNER_PHONE'),
+    phone: env('OWNER_PHONE') ?? ROSTER.owner,
     expect: { orgRoleLevel: 'organization_owner', brokerType: 'main', orgWide: true },
   },
   {
     key: 'gm',
     label: 'General Manager',
     phoneEnv: 'GM_PHONE',
-    phone: env('GM_PHONE'),
+    phone: env('GM_PHONE') ?? ROSTER.gm,
     expect: { orgRoleLevel: 'general_manager', brokerType: 'main', orgWide: true },
   },
   {
     key: 'presales-manager',
     label: 'Pre-Sales Manager',
     phoneEnv: 'PRESALES_MANAGER_PHONE',
-    phone: env('PRESALES_MANAGER_PHONE'),
+    phone: env('PRESALES_MANAGER_PHONE') ?? ROSTER.presalesManager,
     expect: {
       orgRoleLevel: 'manager',
       teamFunction: 'presales',
@@ -68,7 +70,7 @@ export const PERSONAS: Persona[] = [
     key: 'presales-rep',
     label: 'Pre-Sales Representative',
     phoneEnv: 'PRESALES_REP_PHONE',
-    phone: env('PRESALES_REP_PHONE'),
+    phone: env('PRESALES_REP_PHONE') ?? ROSTER.presalesRep,
     expect: {
       orgRoleLevel: 'representative',
       teamFunction: 'presales',
@@ -80,7 +82,7 @@ export const PERSONAS: Persona[] = [
     key: 'sales-rep',
     label: 'Sales Representative',
     phoneEnv: 'SALES_REP_PHONE',
-    phone: env('SALES_REP_PHONE'),
+    phone: env('SALES_REP_PHONE') ?? ROSTER.salesRep,
     expect: {
       orgRoleLevel: 'representative',
       teamFunction: 'sales',
@@ -92,7 +94,7 @@ export const PERSONAS: Persona[] = [
     key: 'marketing-rep',
     label: 'Marketing Representative',
     phoneEnv: 'MARKETING_REP_PHONE',
-    phone: env('MARKETING_REP_PHONE'),
+    phone: env('MARKETING_REP_PHONE') ?? ROSTER.marketingRep,
     expect: {
       orgRoleLevel: 'representative',
       teamFunction: 'marketing',

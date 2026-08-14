@@ -35,12 +35,9 @@ import {
   Page,
   APIRequestContext,
 } from '@playwright/test';
+import { BROKER_PHONE } from '../../utils/brokerPhones';
 
 test.setTimeout(180000);
-
-test.describe.configure({
-  mode: 'serial',
-});
 
 const LOGIN_URL =
   'https://dev.propfocus.in/dashboard/login';
@@ -51,8 +48,8 @@ const CURATION_URL =
 const BUYER_NAME = 'Arhan';
 
 const PHONE = {
-  MAIN: '9999999999',
-  SUB: '9888898888',
+  MAIN: BROKER_PHONE.MAIN_BROKER,
+  SUB: BROKER_PHONE.SUB_BROKER,
 } as const;
 
 const OTP = '123456';

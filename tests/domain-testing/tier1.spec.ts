@@ -123,7 +123,7 @@ async function sendMicrositeRequest(
 let buyerId = '';
 let micrositeUrl = '';
 
-test.describe.serial(
+test.describe(
   'Tier 1 Routing',
   () => {
 
@@ -143,8 +143,7 @@ test.describe.serial(
 
         // A `success: true` response can still carry NO link (e.g.
         // "permission denied" / "clarification request"). Assert the link
-        // actually exists AND matches the Tier 1 URL shape right here, so the
-        // serial block fails fast with the real reason instead of passing hollow.
+        // actually exists AND matches the Tier 1 URL shape right here.
         expect(
           responseBody.success,
           `webhook not successful: ${responseBody.message}`

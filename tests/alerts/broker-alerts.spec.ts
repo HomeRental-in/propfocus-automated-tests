@@ -45,7 +45,7 @@ const HIGH_VALUE_EVENTS = ['site_visit_booked', 'callback_requested'] as const;
 
 const PROJECT = 'Abhee';
 
-test.describe.serial('Broker Alerts', () => {
+test.describe('Broker Alerts', () => {
   test.skip(!adminCredsConfigured(), 'Set ADMIN_EMAIL/ADMIN_PASSWORD for alert audit');
 
   test.setTimeout(180000);
