@@ -29,7 +29,7 @@ const API_URL =
 const PHONE = {
   ACTIVE:
     process.env.TEST_PHONE ??
-    '9888898888',
+    '8374095506',
 } as const;
 
 const BUYER_NAME = 'Harsha';
