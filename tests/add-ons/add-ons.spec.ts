@@ -1164,7 +1164,7 @@ test(
       await sendPrompt(request, prompt);
 
     expect(response.success).toBe(true);
-
+   
     expect(
       response.message,
       'RNR keyword inside sentence should trigger template'
@@ -1267,7 +1267,7 @@ test(
       ).toBeTruthy();
 
       console.log(
-        `Buyer ID variant "${variant}" verified ✓`
+        `Buyer ID variant "${variant}" verified ✓`   
       );
 
     }
