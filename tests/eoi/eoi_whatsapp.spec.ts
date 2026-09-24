@@ -184,8 +184,7 @@ const nlpFormatCases: NlpFormatCase[] = [
     expectedFields: { buyerName: BUYER_NAME, eoiType: EOI_TYPE },
   },
   {
-    name: 'NLP_EOI_04 - Name with ID EOI type (no "for" keyword)',
-    tags: '@regression',
+    name: 'NLP_EOI_04 - Name with ID EOI type (no "for" keyword)',    tags: '@regression',
     buildBody: ({ buyerName, buyerId, eoiType }) =>
       `${buyerName} with ID ${buyerId} ${eoiType}`,
     expectedFields: { buyerName: BUYER_NAME, eoiType: EOI_TYPE },
