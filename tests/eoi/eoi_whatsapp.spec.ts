@@ -366,7 +366,7 @@ const nlpFormatCases: NlpFormatCase[] = [
 
   // --------------------------------------------------
   // Name & EOI type edge shapes (still valid NLP)
-  // --------------------------------------------------
+  // --------------------------------------------------   
   {
     name: 'NLP_EOI_27 - Two-word buyer name',
     tags: '@regression',
@@ -430,7 +430,7 @@ const nlpFormatCases: NlpFormatCase[] = [
 ];
 
 // Invalid / missing buyer ID cases live in eoi-generation.spec.ts
-// (parser currently accepts some of those inputs — tracked there).
+// (parser currently accepts some of those inputs — tracked theres).
 
 const nlpGracefulFailureCases: NlpGracefulFailureCase[] = [
   {
