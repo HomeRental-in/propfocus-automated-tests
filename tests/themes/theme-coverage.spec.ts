@@ -130,7 +130,7 @@ test.describe('Theme coverage', () => {
     const body = await postWebhook(
       request,
       buildEoiPrompt(buyerName, buyerId, TEST_DATA.eoiProject),
-      DEFAULT_PHONE
+      TEST_DATA.eoiPhone
     );
     assertEoiSuccess(body);
 

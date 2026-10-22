@@ -260,7 +260,11 @@ test.describe('Release: buyer pages on mobile @release @smoke', () => {
     assertSiteVisitSuccess(sv);
     const pv = await postWebhook(request, buildPostVisitPrompt(uniqueBuyerName('RelPv'), uniqueBuyerId('P'), project));
     assertPostVisitSuccess(pv);
-    const eoi = await postWebhook(request, buildEoiPrompt(uniqueBuyerName('RelEoi'), uniqueBuyerId('E'), TEST_DATA.eoiProject));
+    const eoi = await postWebhook(
+      request,
+      buildEoiPrompt(uniqueBuyerName('RelEoi'), uniqueBuyerId('E'), TEST_DATA.eoiProject),
+      TEST_DATA.eoiPhone
+    );
     assertEoiSuccess(eoi);
 
     const pages: [string, string][] = [

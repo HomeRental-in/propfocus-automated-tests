@@ -110,8 +110,19 @@ export const WORKSPACES: TeamFunction[] = ['presales', 'sales', 'marketing'];
 export const TEST_DATA = {
   /** Accessible standalone project for post-visit / EOI tests. */
   postVisitProject: env('POST_VISIT_PROJECT') ?? 'Abhee Tranquila',
-  /** Project that has an EOI campaign configured on dev. */
-  eoiProject: env('EOI_PROJECT') ?? 'Unnati',
+  /**
+   * Campaign alias that resolves to the EOI campaign configured on dev.
+   * ('Unnati' stopped working 2026-10: it now matches two projects — KNS Unnati
+   * Phase 5 and Hosachiguru Unnati — so the parser asks for clarification, and
+   * the only dev EOI campaign is now "An Upcoming Project", alias "Upcoming
+   * Project", owned by a different org than the automation roster.)
+   */
+  eoiProject: env('EOI_PROJECT') ?? 'Upcoming Project',
+  /**
+   * Broker whose org owns the dev EOI campaign. EOI campaigns are org-scoped,
+   * so EOI prompts from the automation roster get "projects not found".
+   */
+  eoiPhone: env('EOI_PHONE') ?? '8374095506',
   /** An accessible phased project (alias form the parser resolves). */
   phasedProject: env('PHASED_PROJECT') ?? 'KNS Samooha',
 };

@@ -24,7 +24,8 @@ test('EOI Positive - create EOI for campaign project @sanity', async ({ request 
 
   const body = await postWebhook(
     request,
-    buildEoiPrompt(name, id, TEST_DATA.eoiProject)
+    buildEoiPrompt(name, id, TEST_DATA.eoiProject),
+    TEST_DATA.eoiPhone
   );
 
   assertEoiSuccess(body);
@@ -39,10 +40,10 @@ test('EOI Positive - same buyer and project reuses the same link @sanity', async
   const id = uniqueBuyerId();
   const prompt = buildEoiPrompt(name, id, TEST_DATA.eoiProject);
 
-  const first = await postWebhook(request, prompt);
+  const first = await postWebhook(request, prompt, TEST_DATA.eoiPhone);
   assertEoiSuccess(first);
 
-  const second = await postWebhook(request, prompt);
+  const second = await postWebhook(request, prompt, TEST_DATA.eoiPhone);
   assertEoiSuccess(second);
 
   expect(second.reused).toBe(true);
@@ -57,9 +58,14 @@ test('EOI Negative - project without an EOI campaign is rejected @regression', a
   const name = uniqueBuyerName();
   const id = uniqueBuyerId();
 
+  // From the EOI org, a project without a campaign fails with
+  // "EOI campaign not found". (From other orgs the bot now silently falls
+  // back to creating a plain microsite instead of rejecting, so this must
+  // run from the EOI org to test the rejection path.)
   const body = await postWebhook(
     request,
-    buildEoiPrompt(name, id, PROJECT_WITHOUT_CAMPAIGN)
+    buildEoiPrompt(name, id, PROJECT_WITHOUT_CAMPAIGN),
+    TEST_DATA.eoiPhone
   );
 
   assertLinkFailure(body);
@@ -68,9 +74,13 @@ test('EOI Negative - project without an EOI campaign is rejected @regression', a
 test('EOI Negative - missing buyer id is rejected @regression', async ({ request }) => {
   const name = uniqueBuyerName();
   // Raw prompt without a buyer id: "<name> for <project> eoi".
+  // Single-token names fail with "EOI fields incomplete" as expected; beware
+  // that a TWO-word name ("Kiran Rao for ... eoi") is accepted and creates
+  // the page, so this must keep using uniqueBuyerName()'s one-token form.
   const body = await postWebhook(
     request,
-    `${name} for ${TEST_DATA.eoiProject} eoi`
+    `${name} for ${TEST_DATA.eoiProject} eoi`,
+    TEST_DATA.eoiPhone
   );
 
   assertLinkFailure(body);

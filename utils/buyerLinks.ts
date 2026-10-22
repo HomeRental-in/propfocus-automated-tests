@@ -115,6 +115,15 @@ export function buildMicrositePrompt(
   return `${buyerName} ${buyerId} for ${project}${flag ? ` ${flag}` : ''}`.trim();
 }
 
+/** Curation (multi-project) microsite: comma-separated project list. */
+export function buildCurationPrompt(
+  buyerName: string,
+  buyerId: string,
+  projects: string[]
+): string {
+  return `${buyerName} ${buyerId} for ${projects.join(',')}`;
+}
+
 export function buildSiteVisitPrompt(
   buyerName: string,
   buyerId: string,

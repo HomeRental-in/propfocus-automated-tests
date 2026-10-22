@@ -66,9 +66,10 @@ async function generateCurationMicrosite(
   const buyerId =
     uniqueBuyerId();
 
-  // Dynamic curation prompt
+  // Dynamic curation prompt ('Unnati' dropped: it now matches two projects
+  // and triggers a clarification request instead of a curation).
   const prompt =
-    `Arhan ${buyerId} for Abhee Aaria,Unnati,Sampada`;
+    `Arhan ${buyerId} for Abhee Aaria,Sampada,Abhee Tranquila`;
 
   console.log(
     `Sending Prompt: ${prompt}`
@@ -149,10 +150,11 @@ test.beforeAll(
       `\nGenerated Curation URL: ${curationUrl}`
     );
 
+    // Curation URLs moved from /propfocus-internal/ to /<org-slug>/<token>.
     expect(
       curationUrl
-    ).toContain(
-      '/propfocus-internal/'
+    ).toMatch(
+      /^https?:\/\/.+\/[^/]+\/[^/]+/
     );
 
   }

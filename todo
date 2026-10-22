@@ -1,5 +1,6 @@
+All previous items covered:
 
-curation page tracking both themes
-Dashboard
-Multi domain testing
-Post site visit tracking
+- curation page tracking both themes -> tests/microsite/curation-tracking-themes.spec.ts
+- Dashboard -> tests/dashboard/* (testing, bulk-actions, buyer-id-update, live-engagement, persona-permissions, realtime-updates, responsive, 1000leads)
+- Multi domain testing -> tests/domain-testing/* (tier1, tier-2, tier-3, tier-buyer-links, domain-routing)
+- Post site visit tracking -> tests/tracking/buyer-link-tracking.spec.ts (post-visit activities record + read back)

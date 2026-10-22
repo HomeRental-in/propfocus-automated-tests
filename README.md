@@ -126,6 +126,7 @@ New areas and their spec files:
 | EOI creation (campaign project, reuse, no-campaign/negatives) | `tests/eoi/eoi-creation.spec.ts` | WhatsApp webhook → `linkToken`/`eoiUrl` |
 | Tracking on all 4 pages | `tests/tracking/buyer-link-tracking.spec.ts` | `POST /track-event` + `/site-visit|post-visit|eoi/:token/activity`, read back via `/microsite/:id/events` and page GETs |
 | Themes (project-theme overrides + EOI hola) + theme-agnostic tracking | `tests/themes/theme-coverage.spec.ts` | Page render + `?projectTheme=` override + tracking still fires |
+| Curation (multi-project) page tracking under both project themes | `tests/microsite/curation-tracking-themes.spec.ts` | Curation render under `?projectTheme=omnia/57avenue` + `POST /track-event` read back via `/microsite/:id/events` |
 | Buyer links across tier 1/2/3 domains | `tests/domain-testing/tier-buyer-links.spec.ts` | Asserts `postVisitUrl`/`eoiUrl` match each tier's URL shape |
 | Broker alerts | `tests/alerts/broker-alerts.spec.ts` | Admin `engagement-alert-audit` / `visitor-alert-audit` (alerts are WhatsApp-only, verified via backend audit) |
 | Dashboard real-time (60s polling) | `tests/dashboard/realtime-updates.spec.ts` | Create activity → poll `recent-activity` / `microsites` |
