@@ -5,6 +5,7 @@ import {
 } from '@playwright/test';
 import { APIRequestContext } from '@playwright/test';
 import { BROKER_PHONE } from '../../utils/brokerPhones';
+import { dismissOnboardingTour } from '../../utils/uiLogin';
 
 const PROJECT_NAME = 'Abhee Tranquila';
 const BUYER_NAME = 'Arhan';
@@ -103,6 +104,7 @@ async function login(
       timeout: 30000
     }
   );
+  await dismissOnboardingTour(page);
 
   await expect(
   page.getByRole('button', {

@@ -22,6 +22,20 @@ export async function loginViaUI(page: Page, phone: string = UI_PHONE): Promise<
   await page.getByRole("button", { name: "Verify & Sign In" }).click();
 
   await page.waitForURL(/\/dashboard/, { timeout: 20_000 });
+  await dismissOnboardingTour(page);
+}
+
+/**
+ * The broker-onboarding "Quick Tour" dialog shows once per broker (server-side
+ * flag, set only when the dialog is closed) and its backdrop intercepts every
+ * click until dismissed. Fresh brokers / reset dev DBs hit it on first login.
+ */
+export async function dismissOnboardingTour(page: Page): Promise<void> {
+  const dialog = page.locator('[aria-labelledby="broker-onboarding-title"]');
+  if (await dialog.isVisible({ timeout: 2_000 }).catch(() => false)) {
+    await dialog.locator("button").first().click().catch(() => {});
+    await dialog.waitFor({ state: "hidden", timeout: 5_000 }).catch(() => {});
+  }
 }
 
 /** Navigate to a dashboard tab (?tab=…); overview is the bare /dashboard route. */

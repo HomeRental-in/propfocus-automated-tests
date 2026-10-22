@@ -854,7 +854,7 @@ test(
 // ======================================================
 // TC_MS_12
 // PHONE BUTTON TRACKING
-// Button: "+91 83740 95506" (gold button, top right and contact section)
+// Button: "+919999999999" (gold button, top right and contact section)
 // ======================================================
 
 test(

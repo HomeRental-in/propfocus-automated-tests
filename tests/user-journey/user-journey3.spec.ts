@@ -5,6 +5,7 @@ import {
   APIRequestContext,
 } from '@playwright/test';
 import { BROKER_PHONE } from '../../utils/brokerPhones';
+import { dismissOnboardingTour } from '../../utils/uiLogin';
 
 let micrositeUrl = '';
 let buyerId = '';
@@ -110,6 +111,7 @@ async function login(
       timeout: 30000,
     }
   );
+  await dismissOnboardingTour(page);
 
   await expect(
     page.getByText(

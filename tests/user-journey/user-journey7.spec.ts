@@ -6,6 +6,7 @@ import {
 
 
 import { BROKER_PHONE } from '../../utils/brokerPhones';
+import { dismissOnboardingTour } from '../../utils/uiLogin';
 
 const SUB_BROKER_PHONE = BROKER_PHONE.SUB_BROKER;
 const OTP = '123456';
@@ -74,6 +75,7 @@ async function login(
       timeout: 30000
     }
   );
+  await dismissOnboardingTour(page);
 
   await expect(
   page.getByRole('button', {

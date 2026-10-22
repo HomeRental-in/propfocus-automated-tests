@@ -1,4 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
+import { dismissOnboardingTour } from '../../utils/uiLogin';
 
 /**
  * Dashboard responsiveness + mobile behaviour (All Leads).
@@ -31,6 +32,7 @@ async function login(page: Page): Promise<void> {
   await page.getByRole("button", { name: "Verify & Sign In" }).click();
 
   await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+  await dismissOnboardingTour(page);
 }
 
 async function gotoLeads(page: Page): Promise<void> {

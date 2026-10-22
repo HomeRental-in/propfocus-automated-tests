@@ -6,3 +6,11 @@ node_modules/
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# Legacy headed-WhatsApp browser profile (contains a logged-in WhatsApp Web
+# session — never commit; safe to delete now that alert-status is API-only)
+/whatsapp-session/
+
+# Local env with real credentials
+.env
+/gate.log

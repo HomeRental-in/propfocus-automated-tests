@@ -5,6 +5,7 @@ import {
   APIRequestContext,
 } from '@playwright/test';
 import { BROKER_PHONE } from '../../utils/brokerPhones';
+import { dismissOnboardingTour } from '../../utils/uiLogin';
 
 // ======================================================
 // CONSTANTS
@@ -138,6 +139,7 @@ async function login(page: Page, phone: string = PHONE.MAIN) {
   await page.getByRole('button', { name: /verify/i }).click();
 
   await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
+  await dismissOnboardingTour(page);
   await page.waitForLoadState('networkidle');
 
   await expect(

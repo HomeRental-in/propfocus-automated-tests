@@ -1,4 +1,5 @@
 import { test, expect, Page } from '@playwright/test';
+import { dismissOnboardingTour } from '../../utils/uiLogin';
 
 const LOGIN_URL = 'https://dev.propfocus.in/dashboard/login';
 const PHONE = '9999999999';
@@ -27,6 +28,7 @@ async function login(page: Page) {
   await page.waitForURL(/dashboard/, {
     timeout: 15000
   });
+  await dismissOnboardingTour(page);
 }
 
 test('should create EOI page with valid details @sanity', async ({ page }) => {

@@ -5,6 +5,7 @@ import {
   BrowserContext,
 } from '@playwright/test';
 import { BROKER_PHONE } from '../../utils/brokerPhones';
+import { dismissOnboardingTour } from '../../utils/uiLogin';
 
 // ======================================================
 // CONSTANTS
@@ -69,6 +70,7 @@ async function login(page: Page, phone: string = PHONE.MAIN) {
  
   // ── Wait for dashboard ────────────────────────────
   await page.waitForURL(/\/dashboard/, { timeout: 15000 });
+  await dismissOnboardingTour(page);
   await page.waitForLoadState('networkidle');
  
   // Confirm dashboard loaded — sidebar text is reliable

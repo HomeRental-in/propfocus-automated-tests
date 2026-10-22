@@ -58,9 +58,39 @@ Production-grade Playwright + TypeScript E2E automation framework for validating
    `.env` phone block. Organization owners cannot be created via
    `POST /admin/brokers` — they come from the org's `contact_phone`.
 
+## Pre-prod deployment gate
+
+Run before every prod deployment:
+
+```bash
+npm run preprod
+```
+
+What it does differently from `npm test`:
+
+- **1 retry** per test — dev-env flake is absorbed, but retried-passes are
+  reported as *flaky* in the HTML report so nothing is hidden.
+- **Skips `tests/ai-search/`** — it needs a manually refreshed `AI_SEARCH_TOKEN`
+  (the baked-in dev JWT expires weekly) and ~50 LLM round-trips; run it on a
+  schedule instead of on deploys.
+- Includes `tests/smoke/preprod-health.spec.ts` — deployment wiring checks:
+  shells respond, WhatsApp webhook alive, tracking config present, buyer links
+  create end-to-end and stay `noindex`, sensitive API groups still 401, and
+  robots/sitemap respond. Point `BASE_URL`/`API_URL` at staging to gate a
+  staging build.
+- `slowMo` is now **opt-in** (`SLOWMO=500 npm run test:headed`); gate runs are
+  full speed.
+
+Reading the result: the run is green ⇒ deploy. Failures are listed in
+`playwright-report/` (`npm run test:report`); *flaky* means passed on retry —
+deployable but worth a look. The onboarding "Quick Tour" dialog is dismissed
+automatically by every login helper (`dismissOnboardingTour`), so a fresh/reset
+dev DB no longer fails UI suites.
+
 ## Available Scripts
 
 - `npm test` - run full test suite (provisions brokers first when admin creds are set)
+- `npm run preprod` - pre-prod deployment gate (see above)
 - `npm run setup:brokers` - create/reuse the dashboard broker roster on dev
 - `npm run test:headed` - run with headed browser
 - `npm run test:ui` - open Playwright UI runner
@@ -101,6 +131,10 @@ New areas and their spec files:
 | Dashboard real-time (60s polling) | `tests/dashboard/realtime-updates.spec.ts` | Create activity → poll `recent-activity` / `microsites` |
 | Dashboard permissions & personas | `tests/dashboard/persona-permissions.spec.ts` | `broker-profile` role assertions + org-wide vs self scoping |
 | Admin panel | `tests/admin/admin-panel.spec.ts` | Admin login + read-only list endpoints + auth gating |
+| Pre-prod deployment health | `tests/smoke/preprod-health.spec.ts` | Shells, webhook, tracking config, buyer-link e2e + noindex, auth gates, robots/sitemap |
+| WhatsApp blast | `tests/whatsapp/whatsapp-blast.spec.ts` | Sample CSV contract + read routes wired + owner/grant permission gate + auth gating (never sends) |
+| Salesforce embed/iframe | `tests/salesforce/salesforce-embed.spec.ts` | `/embed/salesforce/:id` shell + `/api/sf/:id` short-link resolver + crawl exclusion |
+| Buyer-id update (dashboard) | `tests/dashboard/buyer-id-update.spec.ts` | PATCH persists; pins the silent-clear-on-missing-`buyerId` bug; auth gating |
 
 Shared helpers live in `utils/buyerLinks.ts`, `utils/tracking.ts`, `utils/dashboardApi.ts`,
 `utils/adminApi.ts`, and `utils/personas.ts`.

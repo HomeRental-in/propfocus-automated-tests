@@ -3,6 +3,7 @@ import {
   MicrositeFlagAssertType,
   MicrositeFlagDefinition,
 } from './micrositeFlags';
+import { dismissOnboardingTour } from './uiLogin';
 
 const API_URL =
   process.env.API_URL ??
@@ -137,6 +138,7 @@ export async function loginDashboard(
   await page.getByRole('button', { name: /verify/i }).click();
 
   await page.waitForURL(/dashboard/, { timeout: 30000 });
+  await dismissOnboardingTour(page);
 }
 
 export async function openAllLeads(page: Page): Promise<void> {

@@ -2,6 +2,7 @@
 
 import { test, expect, Page, APIRequestContext } from '@playwright/test';
 import { BROKER_PHONE } from '../utils/brokerPhones';
+import { dismissOnboardingTour } from '../utils/uiLogin';
 
 // ======================================================
 // CONSTANTS
@@ -49,6 +50,7 @@ async function login(page: Page, phone: string = PHONE.MAIN) {
     .click();
 
   await page.waitForURL(/\/dashboard/, { timeout: 15000 });
+  await dismissOnboardingTour(page);
   await page.waitForLoadState('networkidle');
 
   await expect(

@@ -5,6 +5,7 @@
   "description": "Production-grade Playwright + TypeScript E2E automation framework for PropFocus",
   "scripts": {
     "test": "playwright test",
+    "preprod": "PREPROD=1 playwright test",
     "test:headed": "playwright test --headed",
     "test:ui": "playwright test --ui",
     "smoke": "playwright test --grep @smoke",

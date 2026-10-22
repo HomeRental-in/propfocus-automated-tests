@@ -5,6 +5,7 @@ import {
   APIRequestContext,
 } from '@playwright/test';
 import { BROKER_PHONE } from '../../utils/brokerPhones';
+import { dismissOnboardingTour } from '../../utils/uiLogin';
 
 test.setTimeout(120000);
 
@@ -44,6 +45,7 @@ async function login(page: Page, phone: string = PHONE.MAIN) {
   await otpInput.fill(OTP);
   await page.getByRole('button', { name: /verify/i }).click();
   await page.waitForURL(/dashboard/, { timeout: 30000 });
+  await dismissOnboardingTour(page);
 }
 
 test.beforeAll(async ({ request }) => {
@@ -107,15 +109,20 @@ test('UJ5_STEP_04 - Verify Phone CTA Event', async ({ page }) => {
   expect(eventCaptured).toBeTruthy();
 });
 
-test('UJ5_STEP_05 - Click WhatsApp CTA', async ({ page }) => {
+// wa.me / WhatsApp navigation is aborted at the network layer: the click still
+// runs the microsite's tracking handler (what we test) without ever handing
+// off to WhatsApp — we test PropFocus flows, not WhatsApp.
+async function blockWhatsAppNavigation(page: Page): Promise<void> {
+  await page.route(/https:\/\/(wa\.me|api\.whatsapp\.com|web\.whatsapp\.com)\/.*/, r => r.abort());
+}
+
+test('UJ5_STEP_05 - WhatsApp CTA links to WhatsApp', async ({ page }) => {
   await page.goto(micrositeUrl);
   await page.waitForLoadState('networkidle');
-  const [newPage] = await Promise.all([
-    page.context().waitForEvent('page').catch(() => null),
-    page.locator('a[href^="https://wa.me"]').first().click(),
-  ]);
-  if (newPage) await newPage.waitForTimeout(1000);
-  console.log('WhatsApp CTA clicked ✓');
+  const waLink = page.locator('a[href^="https://wa.me"]').first();
+  await expect(waLink).toBeVisible();
+  expect(await waLink.getAttribute('href')).toMatch(/^https:\/\/wa\.me\//);
+  console.log('WhatsApp CTA present with wa.me href ✓');
 });
 
 test('UJ5_STEP_06 - Verify WhatsApp CTA Event', async ({ page }) => {
@@ -132,6 +139,7 @@ test('UJ5_STEP_06 - Verify WhatsApp CTA Event', async ({ page }) => {
   });
 
   await page.goto(micrositeUrl);
+  await blockWhatsAppNavigation(page);
   await page.locator('a[href^="https://wa.me"]').first().click();
   await page.waitForTimeout(3000);
   console.log('WhatsApp CTA event logged ✓');
