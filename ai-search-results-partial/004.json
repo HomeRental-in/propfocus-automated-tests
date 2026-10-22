@@ -1,0 +1,10 @@
+{
+  "question": "Show leads created today",
+  "status": 401,
+  "response": {
+    "success": false,
+    "error": "Invalid or expired token",
+    "statusCode": 401,
+    "timestamp": "2026-08-20T18:34:29.539Z"
+  }
+}
